@@ -1,61 +1,53 @@
-// rollup.config.js
-import typescript from '@rollup/plugin-typescript';
-import resolve from '@rollup/plugin-node-resolve';
+import { nodeResolve } from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
+import typescript from '@rollup/plugin-typescript';
 import terser from '@rollup/plugin-terser';
 import dts from 'rollup-plugin-dts';
 
-const packageJson = require('./package.json');
+const production = !process.env.ROLLUP_WATCH;
 
 export default [
+    // Main build
     {
         input: 'src/index.ts',
         output: [
             {
-                file: packageJson.module,
-                format: 'esm',
-                sourcemap: true,
-            },
-            {
-                file: packageJson.main,
+                file: 'dist/index.js',
                 format: 'cjs',
-                sourcemap: true,
+                sourcemap: true
             },
             {
-                file: 'dist/cashier-sdk.umd.js',
-                format: 'umd',
-                name: 'CashierSDK',
-                sourcemap: true,
+                file: 'dist/index.esm.js',
+                format: 'es',
+                sourcemap: true
             },
             {
-                file: 'dist/cashier-sdk.umd.min.js',
+                file: 'dist/index.umd.js',
                 format: 'umd',
                 name: 'CashierSDK',
-                sourcemap: true,
-                plugins: [terser()],
-            },
+                sourcemap: true
+            }
         ],
         plugins: [
-            resolve({
+            nodeResolve({
                 browser: true,
+                preferBuiltins: false
             }),
             commonjs(),
             typescript({
                 tsconfig: './tsconfig.json',
-                declaration: false,
+                sourceMap: true
             }),
-        ],
-        external: [
-            // Add any external dependencies here that shouldn't be bundled
-            // For example: 'react', 'vue', etc.
-        ],
+            production && terser()
+        ]
     },
+    // TypeScript declarations
     {
         input: 'src/index.ts',
         output: {
             file: 'dist/index.d.ts',
-            format: 'esm',
+            format: 'es'
         },
-        plugins: [dts()],
-    },
+        plugins: [dts()]
+    }
 ];

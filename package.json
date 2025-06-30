@@ -1,29 +1,45 @@
 {
-	"name": "checkout-js",
-	"private": true,
+	"name": "cashier-sdk",
 	"version": "0.0.1",
+	"description": "A framework-agnostic JavaScript SDK for payment processing with iframe integration",
+	"main": "dist/index.js",
+	"module": "dist/index.esm.js",
+	"types": "dist/index.d.ts",
+	"files": [
+		"dist"
+	],
 	"type": "module",
 	"scripts": {
-		"dev": "vite dev",
-		"build": "vite build",
-		"preview": "vite preview",
-		"prepare": "svelte-kit sync || echo ''",
-		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
+		"build": "rollup -c",
+		"dev": "rollup -c -w",
+		"prepare": "npm run build",
+		"test": "echo \"Error: no test specified\" && exit 0",
+		"lint": "eslint src --ext .ts",
+		"clean": "rm -rf dist"
+	},
+	"keywords": [
+		"payment",
+		"sdk",
+		"javascript",
+		"typescript",
+		"iframe",
+		"cashier",
+		"checkout",
+		"payments"
+	],
+	"author": "Your Name",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/omno-core/checkout-js"
 	},
 	"devDependencies": {
 		"@rollup/plugin-commonjs": "^28.0.6",
 		"@rollup/plugin-node-resolve": "^16.0.1",
 		"@rollup/plugin-terser": "^0.4.4",
 		"@rollup/plugin-typescript": "^12.1.3",
-		"@sveltejs/adapter-auto": "^6.0.0",
-		"@sveltejs/kit": "^2.16.0",
-		"@sveltejs/vite-plugin-svelte": "^5.0.0",
 		"rollup": "^4.43.0",
 		"rollup-plugin-dts": "^6.2.1",
-		"svelte": "^5.0.0",
-		"svelte-check": "^4.0.0",
-		"typescript": "^5.8.3",
-		"vite": "^6.2.6"
+		"typescript": "^5.8.3"
 	}
 }
