@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount, onDestroy } from 'svelte';
-    import { CashierSDK } from '../CashierSDK';
+    import { CashierSDK } from '../lib/CashierSDK';
     import { PaymentService } from '../PaymentService';
     import type { PayInTransactionData, PayInResponse } from '../PaymentService';
 

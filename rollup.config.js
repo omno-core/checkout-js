@@ -9,7 +9,7 @@ const production = !process.env.ROLLUP_WATCH;
 export default [
     // Main build
     {
-        input: 'src/index.ts',
+        input: 'lib/index.ts',
         output: [
             {
                 file: 'dist/index.js',
@@ -43,7 +43,7 @@ export default [
     },
     // TypeScript declarations
     {
-        input: 'src/index.ts',
+        input: 'lib/index.ts',
         output: {
             file: 'dist/index.d.ts',
             format: 'es'

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test</title>
+
+</head>
+<body>
+
+
+<input id="paymentUrl" name="paymentUrl" value=""/>
+<button onclick="openPaymentIframe(document.getElementById('paymentUrl').value)">Open</button>
+
+<!-- First load the library -->
+<script src="./dist/index.umd.js"></script>
+
+<!-- Initialize and use the SDK -->
+<script>
+    // CashierSDK is exported as the default from your bundle
+    const config = {
+        apiBaseUrl: 'https://checkout.omno.dev',
+    }
+
+    // Create an instance of the SDK
+    const cashierSDK = new CashierSDK.default(config);
+
+    // Define the function that will be called by the button
+    function openPaymentIframe(url) {
+        cashierSDK.openPaymentIframe(url);
+    }
+</script>
+
+
+
+</body>
+</html>
