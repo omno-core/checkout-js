@@ -1,35 +1,199 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Test</title>
-
+    <title>Enhanced CashierSDK Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            max-width: 500px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .events-log {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .timestamp {
+            font-size: 0.8em;
+            color: #666;
+        }
+    </style>
 </head>
 <body>
+<h1>Enhanced CashierSDK Test</h1>
 
+<div class="form-group">
+    <label for="paymentUrl">Payment URL:</label>
+    <input id="paymentUrl" name="paymentUrl" value="https://checkout.omno.dev/payment/test" placeholder="Enter payment URL"/>
+</div>
 
-<input id="paymentUrl" name="paymentUrl" value=""/>
-<button onclick="openPaymentIframe(document.getElementById('paymentUrl').value)">Open</button>
+<div class="form-group">
+    <button onclick="openPaymentIframe()">Open Payment</button>
+    <button onclick="closePaymentIframe()">Close Payment</button>
+    <button onclick="clearLog()">Clear Log</button>
+</div>
 
-<!-- First load the library -->
+<div class="events-log" id="eventsLog">
+    <h3>Events Log</h3>
+    <div id="eventsList"></div>
+</div>
+
 <script src="./dist/index.umd.js"></script>
 
-<!-- Initialize and use the SDK -->
 <script>
-    // CashierSDK is exported as the default from your bundle
     const config = {
         apiBaseUrl: 'https://checkout.omno.dev',
-    }
+        borderRadius: '12px',
+        backgroundColor: '#ffffff'
+    };
 
-    // Create an instance of the SDK
     const cashierSDK = new CashierSDK.default(config);
 
-    // Define the function that will be called by the button
-    function openPaymentIframe(url) {
-        cashierSDK.openPaymentIframe(url);
+    function logEvent(eventType, data, level = 'info') {
+        const eventsList = document.getElementById('eventsList');
+        const eventItem = document.createElement('div');
+        eventItem.className = `event-item event-${level}`;
+
+        const timestamp = new Date().toLocaleTimeString();
+        eventItem.innerHTML = `
+                <div><strong>${eventType}</strong> <span class="timestamp">${timestamp}</span></div>
+                <div><pre>${JSON.stringify(data, null, 2)}</pre></div>
+            `;
+
+        eventsList.appendChild(eventItem);
+        eventsList.scrollTop = eventsList.scrollHeight;
     }
+
+    cashierSDK.on('paymentSuccess', (data) => {
+        logEvent('Payment Success', data, 'success');
+        alert('Payment successful!');
+    });
+
+    cashierSDK.on('paymentFailed', (data) => {
+        logEvent('Payment Failed', data, 'error');
+        alert('Payment failed: ' + (data.error || data.message || 'Unknown error'));
+    });
+
+    cashierSDK.on('paymentPending', (data) => {
+        logEvent('Payment Pending', data, 'info');
+    });
+
+    cashierSDK.on('paymentCanceled', (data) => {
+        logEvent('Payment Canceled', data, 'info');
+        alert('Payment was canceled');
+    });
+
+    cashierSDK.on('userCanceled', (data) => {
+        logEvent('User Canceled', data, 'info');
+    });
+
+    cashierSDK.on('iframeOpened', (data) => {
+        logEvent('Iframe Opened', data, 'info');
+    });
+
+    cashierSDK.on('iframeClosed', (data) => {
+        logEvent('Iframe Closed', data, 'info');
+    });
+
+    cashierSDK.on('iframeReady', (data) => {
+        logEvent('Iframe Ready', data, 'success');
+    });
+
+    cashierSDK.on('closeRequested', (data) => {
+        logEvent('Close Requested', data, 'info');
+    });
+
+    cashierSDK.on('error', (data) => {
+        logEvent('Error', data, 'error');
+        alert('An error occurred: ' + (data.error || data.message || 'Unknown error'));
+    });
+
+    cashierSDK.on('unknownMessage', (data) => {
+        logEvent('Unknown Message', data, 'info');
+    });
+
+    function openPaymentIframe() {
+        const url = document.getElementById('paymentUrl').value;
+        if (!url) {
+            alert('Please enter a payment URL');
+            return;
+        }
+
+        try {
+            cashierSDK.openPaymentIframe(url);
+            logEvent('Opening Payment Iframe', { url }, 'info');
+        } catch (error) {
+            logEvent('Error Opening Iframe', { error: error.message }, 'error');
+            alert('Error opening payment: ' + error.message);
+        }
+    }
+
+    function closePaymentIframe() {
+        cashierSDK.closePaymentIframe();
+        logEvent('Manually Closing Iframe', {}, 'info');
+    }
+
+    function clearLog() {
+        document.getElementById('eventsList').innerHTML = '';
+    }
+
+    function simulateMessage(type, data) {
+        console.log('Simulating message:', type, data);
+
+        cashierSDK.simulateMessage(type, data);
+    }
+
+    setTimeout(() => {
+        const testButtons = document.createElement('div');
+        testButtons.innerHTML = `
+                <h3>Test Message Simulation</h3>
+                <button onclick="simulateMessage('PAYMENT_SUCCESS', {paymentId: 'test-123', amount: 100, currency: 'USD', status: 'success'})">Simulate Success</button>
+                <button onclick="simulateMessage('PAYMENT_FAILED', {error: 'Card declined', paymentId: 'test-123', status: 'failed'})">Simulate Failure</button>
+                <button onclick="simulateMessage('PAYMENT_PENDING', {paymentId: 'test-123', status: 'pending'})">Simulate Pending</button>
+                <button onclick="simulateMessage('PAYMENT_CANCELED', {paymentId: 'test-123', status: 'canceled'})">Simulate Canceled</button>
+                <button onclick="simulateMessage('CLOSE_REQUESTED', {reason: 'user_requested'})">Simulate Close Request</button>
+                <button onclick="simulateMessage('ERROR', {error: 'Network timeout', message: 'Connection failed'})">Simulate Error</button>
+            `;
+        testButtons.style.marginTop = '20px';
+        testButtons.style.padding = '15px';
+        testButtons.style.backgroundColor = '#f8f9fa';
+        testButtons.style.borderRadius = '4px';
+        testButtons.style.border = '1px solid #dee2e6';
+
+        document.body.appendChild(testButtons);
+    }, 1000);
 </script>
-
-
-
 </body>
 </html>

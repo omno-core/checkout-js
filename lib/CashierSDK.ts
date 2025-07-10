@@ -4,6 +4,16 @@ export enum DeviceType {
   AUTO = 'AUTO'
 }
 
+export enum MessageType {
+  PAYMENT_SUCCESS = 'PAYMENT_SUCCESS',
+  PAYMENT_FAILED = 'PAYMENT_FAILED',
+  PAYMENT_PENDING = 'PAYMENT_PENDING',
+  PAYMENT_CANCELED = 'PAYMENT_CANCELED',
+  IFRAME_READY = 'IFRAME_READY',
+  CLOSE_REQUESTED = 'CLOSE_REQUESTED',
+  ERROR = 'ERROR'
+}
+
 export type CashierConfig = {
   apiBaseUrl: string;
   borderRadius?: string;
@@ -17,9 +27,16 @@ export type PaymentEventData = {
   amount?: number;
   currency?: string;
   orderId?: string;
+  transactionId?: string;
   error?: string;
   message?: string;
   [key: string]: any;
+}
+
+export interface CashierMessage {
+  type: MessageType;
+  data: PaymentEventData;
+  timestamp?: number;
 }
 
 export class CashierSDK {
@@ -27,7 +44,7 @@ export class CashierSDK {
   private iframe: HTMLIFrameElement | null = null;
   private eventHandlers: { [key: string]: Function[] } = {};
   private readonly messageListener: (event: MessageEvent) => void;
-  private device: DeviceType;
+  private readonly device: DeviceType;
 
   constructor(config: CashierConfig) {
     this.config = {
@@ -144,23 +161,21 @@ export class CashierSDK {
       modalContent.style.overflow = 'auto';
     }
 
+    const closeButton = document.createElement('button');
+    closeButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600 hover:text-gray-900" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>`;
+    closeButton.className = 'absolute top-3 right-3 bg-transparent border-none cursor-pointer p-1 rounded-full hover:bg-gray-100 transition-colors z-10';
+    closeButton.setAttribute('aria-label', 'Close payment modal');
+
+    closeButton.addEventListener('click', () => {
+      this.emit('userCanceled', {reason: 'close_button_clicked'});
+      this.closePaymentIframe();
+    });
+
+    modalContent.appendChild(closeButton);
+
     if (this.device === DeviceType.DESKTOP) {
-      const closeButton = document.createElement('button');
-      closeButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600 hover:text-gray-900" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>`;
-      closeButton.className = 'absolute top-3 right-3 bg-transparent border-none cursor-pointer p-1 rounded-full hover:bg-gray-100 transition-colors';
-      closeButton.setAttribute('aria-label', 'Close payment modal');
-
-      closeButton.addEventListener('click', () => {
-        this.emit('userCanceled', {reason: 'close_button_clicked'});
-        this.closePaymentIframe();
-      });
-
-      modalContent.appendChild(closeButton);
-    }
-
-    if (this.device === DeviceType.MOBILE) {
       const handleBackdropClick = (e: MouseEvent) => {
         if (e.target === modal) {
           this.emit('userCanceled', {reason: 'backdrop_clicked'});
@@ -190,9 +205,130 @@ export class CashierSDK {
       return;
     }
 
-    const data = event.data;
+    const rawData = event.data;
+    console.log('Raw message received:', rawData);
 
-    console.log({data})
+    // Parse the message based on your data structure
+    const message = this.parseMessage(rawData);
+
+    if (message) {
+      console.log('Parsed message:', message);
+      this.handleMessage(message);
+    }
+  }
+
+  private parseMessage(data: any): CashierMessage | null {
+    try {
+      let parsedMessage: CashierMessage;
+
+      if (data.type && data.data) {
+        parsedMessage = {
+          type: data.type,
+          data: data.data,
+          timestamp: data.timestamp || Date.now()
+        };
+      }
+      else if (data.status || data.paymentId || data.transactionId) {
+        parsedMessage = {
+          type: this.determineMessageType(data),
+          data: data,
+          timestamp: Date.now()
+        };
+      }
+      else if (typeof data === 'string') {
+        try {
+          const parsed = JSON.parse(data);
+          return this.parseMessage(parsed);
+        } catch {
+          return null;
+        }
+      }
+      else {
+        return null;
+      }
+
+      return parsedMessage;
+    } catch (error) {
+      console.error('Error parsing message:', error);
+      return null;
+    }
+  }
+
+  private determineMessageType(data: any): MessageType {
+    if (data.status) {
+      switch (data.status.toLowerCase()) {
+        case 'success':
+        case 'completed':
+        case 'paid':
+          return MessageType.PAYMENT_SUCCESS;
+        case 'failed':
+        case 'error':
+          return MessageType.PAYMENT_FAILED;
+        case 'pending':
+        case 'processing':
+          return MessageType.PAYMENT_PENDING;
+        case 'canceled':
+        case 'cancelled':
+          return MessageType.PAYMENT_CANCELED;
+        default:
+          return MessageType.ERROR;
+      }
+    }
+
+    if (data.error) {
+      return MessageType.ERROR;
+    }
+
+    if (data.ready) {
+      return MessageType.IFRAME_READY;
+    }
+
+    if (data.close || data.closeRequested) {
+      return MessageType.CLOSE_REQUESTED;
+    }
+
+    return MessageType.ERROR;
+  }
+
+  private handleMessage(message: CashierMessage): void {
+    switch (message.type) {
+      case MessageType.PAYMENT_SUCCESS:
+        this.emit('paymentSuccess', message.data);
+        setTimeout(() => {
+          this.closePaymentIframe();
+        }, 2000);
+        break;
+
+      case MessageType.PAYMENT_FAILED:
+        this.emit('paymentFailed', message.data);
+        break;
+
+      case MessageType.PAYMENT_PENDING:
+        this.emit('paymentPending', message.data);
+        break;
+
+      case MessageType.PAYMENT_CANCELED:
+        this.emit('paymentCanceled', message.data);
+        this.closePaymentIframe();
+        break;
+
+      case MessageType.IFRAME_READY:
+        this.emit('iframeReady', message.data);
+        break;
+
+      case MessageType.CLOSE_REQUESTED:
+        this.emit('closeRequested', message.data);
+        this.closePaymentIframe();
+        break;
+
+      case MessageType.ERROR:
+        this.emit('error', message.data);
+        break;
+
+      default:
+        console.warn('Unknown message type:', message.type);
+        this.emit('unknownMessage', message.data);
+    }
   }
 
   private isValidOrigin(origin: string): boolean {
@@ -212,15 +348,16 @@ export class CashierSDK {
     this.eventHandlers[event].push(callback);
   }
 
-  off(event: string, callback?: Function): void {
-    if (!this.eventHandlers[event]) return;
 
-    if (callback) {
-      this.eventHandlers[event] = this.eventHandlers[event].filter(cb => cb !== callback);
-    } else {
-      delete this.eventHandlers[event];
-    }
-  }
+  //  off(event: string, callback?: Function): void {
+  //   if (!this.eventHandlers[event]) return;
+  //
+  //   if (callback) {
+  //     this.eventHandlers[event] = this.eventHandlers[event].filter(cb => cb !== callback);
+  //   } else {
+  //     delete this.eventHandlers[event];
+  //   }
+  // }
 
   private emit(event: string, data: PaymentEventData): void {
     if (this.eventHandlers[event]) {
@@ -234,12 +371,29 @@ export class CashierSDK {
     }
   }
 
-  getDevice(): DeviceType {
-    return this.device;
-  }
+  // getDevice(): DeviceType {
+  //   return this.device;
+  // }
+  //
+  // updateDevice(): void {
+  //   this.device = this.detectDevice();
+  // }
+  //
+  // sendMessage(message: CashierMessage): void {
+  //   if (this.iframe && this.iframe.contentWindow) {
+  //     this.iframe.contentWindow.postMessage(message, this.config.apiBaseUrl);
+  //   }
+  // }
 
-  updateDevice(): void {
-    this.device = this.detectDevice();
+  simulateMessage(type: MessageType, data: PaymentEventData): void {
+    const message: CashierMessage = {
+      type: type,
+      data: data,
+      timestamp: Date.now()
+    };
+
+    console.log('Simulating message:', message);
+    this.handleMessage(message);
   }
 }
 
