@@ -10,7 +10,6 @@ export enum CashierMessageType {
   PAYMENT_FAILED = "PAYMENT_FAILED",
   PAYMENT_PENDING = "PAYMENT_PENDING",
   PAYMENT_CANCELED = "PAYMENT_CANCELED",
-  PAYMENT_REDIRECT = "PAYMENT_REDIRECT",
 }
 
 // message emitted by cashierSdk
@@ -26,7 +25,6 @@ export enum CashierEmitEvent {
   PAYMENT_FAILED = "paymentFailed",
   PAYMENT_PENDING = "paymentPending",
   PAYMENT_CANCELED = "paymentCanceled",
-  PAYMENT_REDIRECT = "paymentRedirect",
 
   UNKNOWN = "unknown",
 }
@@ -44,7 +42,6 @@ export type CashierEventMap = {
   [CashierEmitEvent.PAYMENT_FAILED]: PaymentEmitEventData;
   [CashierEmitEvent.PAYMENT_PENDING]: PaymentEmitEventData;
   [CashierEmitEvent.PAYMENT_CANCELED]: PaymentEmitEventData;
-  [CashierEmitEvent.PAYMENT_REDIRECT]: PaymentEmitEventData;
 
   [CashierEmitEvent.UNKNOWN]: { type: string; data: any };
 };

@@ -47,10 +47,6 @@ cashier.on(CashierEmitEvent.PAYMENT_CANCELED, (data) => {
   console.warn("⚠️ Payment canceled", data);
 });
 
-cashier.on(CashierEmitEvent.PAYMENT_REDIRECT, (data) => {
-  console.log("🔀 Redirect required", data);
-});
-
 cashier.on(CashierEmitEvent.IFRAME_CLOSED, () => {
   console.log("Cashier iframe closed");
 });

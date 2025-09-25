@@ -91,10 +91,6 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
         this.emit(CashierEmitEvent.PAYMENT_CANCELED, data as PaymentEmitEventData);
         break;
 
-      case CashierMessageType.PAYMENT_REDIRECT:
-        this.emit(CashierEmitEvent.PAYMENT_REDIRECT, data as PaymentEmitEventData);
-        break;
-
       default:
         this.emit(CashierEmitEvent.UNKNOWN, { type, data });
         break;
@@ -131,12 +127,12 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
     const url = this.buildUrl(sessionId);
 
     try {
-      if (this.cashierProperties.device === DeviceType.MOBILE) {
-        this.container = mountMobile(url, this.cashierProperties.styles?.mobile);
-        this.iframe = this.container.querySelector("iframe") ?? undefined;
-      } else if (containerId) {
+      if (containerId) {
         this.iframe = mountInContainerWithId(url, containerId);
         this.container = document.getElementById(containerId) ?? undefined;
+      } else if (this.cashierProperties.device === DeviceType.MOBILE) {
+        this.container = mountMobile(url, this.cashierProperties.styles?.mobile);
+        this.iframe = this.container.querySelector("iframe") ?? undefined;
       } else {
         this.container = mountModal(url, this.cashierProperties.styles?.modal);
         this.iframe = this.container.querySelector("iframe") ?? undefined;
