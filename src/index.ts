@@ -1,14 +1,5 @@
-export { default as CashierSDK } from './lib/CashierSDK';
+import { CashierSDK } from './sdk/cashier'
 
-export type {
-    CustomerBilling,
-    Customer,
-    ReturnUrls,
-    Webhook,
-    PayInTransactionData,
-    CashierConfig,
-    PayInResponse
-} from './lib/CashierSDK';
+export * from "./sdk/types";
 
-import CashierSDK from './lib/CashierSDK';
-export default CashierSDK;
+export default CashierSDK
