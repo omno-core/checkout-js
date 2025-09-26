@@ -1,5 +1,5 @@
 {
-	"name": "cashier-sdk",
+	"name": "@omno-payment/checkout-js",
 	"version": "0.0.1",
 	"description": "A framework-agnostic JavaScript SDK for payment processing with iframe integration",
 	"main": "dist/index.js",
