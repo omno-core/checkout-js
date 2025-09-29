@@ -1,14 +1,23 @@
 {
   "name": "@omno-payment/checkout-js",
-  "version": "1.0.5",
+  "version": "1.0.9",
   "description": "A framework-agnostic JavaScript SDK for payment processing with iframe integration",
+  "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
+  "browser": "dist/index.umd.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "import": "./dist/index.esm.js",
+      "browser": "./dist/index.umd.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "files": [
     "dist"
   ],
-  "type": "module",
   "scripts": {
     "build": "rollup -c",
     "dev": "rollup -c -w",
@@ -25,7 +34,11 @@
     "iframe",
     "cashier",
     "checkout",
-    "payments"
+    "payments",
+    "svelte",
+    "react",
+    "vue",
+    "angular"
   ],
   "author": "Your Name",
   "license": "MIT",

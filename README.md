@@ -147,6 +147,10 @@ cashier.on(CashierEmitEvent.PAYMENT_CANCELED, (data) => {
 ### Iframe Lifecycle Events
 
 ```typescript
+cashier.on(CashierEmitEvent.IFRAME_OPEN_REQUESTED, () => {
+  console.log("Cashier open requested");
+});
+
 cashier.on(CashierEmitEvent.IFRAME_OPENED, ({ sessionId }) => {
   console.log("Cashier opened with session:", sessionId);
 });
@@ -155,12 +159,25 @@ cashier.on(CashierEmitEvent.CASHIER_LOADED, () => {
   console.log("Cashier finished loading");
 });
 
+cashier.on(CashierEmitEvent.IFRAME_CLOSE_REQUESTED, () => {
+  console.log("Cashier iframe close requested");
+});
+
 cashier.on(CashierEmitEvent.IFRAME_CLOSED, () => {
   console.log("Cashier iframe closed");
 });
 
 cashier.on(CashierEmitEvent.IFRAME_DESTROYED, () => {
   console.log("Cashier destroyed");
+});
+
+```
+
+### Additional Events
+
+```typescript
+cashier.on(CashierEmitEvent.LIVE_CHAT_CLICKED, () => {
+  console.log("Live chat clicked");
 });
 ```
 
@@ -205,79 +222,12 @@ The SDK automatically detects mobile devices and adjusts the interface according
 You can override device detection:
 
 ```typescript
+import { DeviceType } from "@omno-payment/checkout-js";
+
 const cashier = new CashierSDK({
-  apiBaseUrl: 'https://api.example.com',
-  device: 'mobile' // Force mobile layout
+  device: DeviceType.MOBILE // Force mobile layout
 });
 ```
-
-## Security
-
-The SDK includes several security features:
-
-## Cashier Integration
-
-Your cashier page should send messages to the parent window using the following format:
-
-```javascript
-// Payment successful
-window.parent.postMessage({
-  type: 'PAYMENT_SUCCESS',
-  data: {
-    transactionId: '12345',
-    amount: 1000,
-    currency: 'USD',
-    orderId: 'order-789'
-  }
-}, '*');
-
-// Payment failed
-window.parent.postMessage({
-  type: 'PAYMENT_ERROR',
-  data: {
-    message: 'Card declined',
-    code: 'CARD_DECLINED',
-    details: { ... }
-  }
-}, '*');
-
-// Payment processing
-window.parent.postMessage({
-  type: 'PAYMENT_PROCESSING',
-  data: {
-    step: 'Validating card...'
-  }
-}, '*');
-
-// Cashier loaded
-window.parent.postMessage({
-  type: 'CASHIER_LOADED',
-  data: {}
-}, '*');
-```
-
-### Supported Message Types
-
-- `PAYMENT_SUCCESS` - Payment completed successfully
-- `PAYMENT_ERROR` / `PAYMENT_FAILED` - Payment failed
-- `PAYMENT_CANCELED` / `PAYMENT_CANCELLED` - Payment canceled
-- `PAYMENT_PROCESSING` - Payment is being processed
-- `PAYMENT_REDIRECT` - Redirect required (3D Secure, etc.)
-- `CASHIER_LOADED` - Cashier interface loaded
-- `IFRAME_CLOSE` / `CLOSE_IFRAME` - Request to close iframe
-
-- **Origin Validation**: Only accepts messages from your configured API domain
-- **Sandbox Attributes**: Iframe is sandboxed with minimal required permissions
-- **Error Handling**: All event handlers are wrapped in try-catch blocks
-- **Input Validation**: Configuration parameters are validated
-
-## Browser Support
-
-- Chrome 60+
-- Firefox 55+
-- Safari 11+
-- Edge 79+
-- Mobile browsers (iOS Safari, Chrome Mobile, etc.)
 
 ## TypeScript Support
 
@@ -304,3 +254,103 @@ cashier.on(CashierEmitEvent.PAYMENT_SUCCESS, (data: PaymentEmitEventData) => {
   console.log("✅ Payment success", data);
 });
 ```
+
+### Svelte Example
+
+```sveltehtml
+
+<script lang="ts">
+  import { onMount, onDestroy } from "svelte";
+  import CashierSDK, { CashierEmitEvent, DeviceType } from "@omno-payment/checkout-js";
+
+  const sessionId = "your-session-id-here";
+  let cashier: CashierSDK;
+
+  onMount(() => {
+    // 1. Initialize SDK
+    cashier = new CashierSDK({
+      device: DeviceType.AUTO,
+      styles: {
+        modal: {
+          backgroundColor: "rgba(0,0,0,0.4)",
+          width: "900px",
+          height: "600px",
+          borderRadius: "12px",
+          zIndex: 9
+        },
+        mobile: {
+          backgroundColor: "rgba(0,0,0,0.4)",
+          zIndex: 10
+        }
+      }
+    });
+
+    // 2. Register event listeners
+    cashier.on(CashierEmitEvent.PAYMENT_SUCCESS, (data) => {
+      console.log("✅ Payment success", data);
+    });
+
+    cashier.on(CashierEmitEvent.PAYMENT_FAILED, (data) => {
+      console.error("❌ Payment failed", data);
+    });
+
+    cashier.on(CashierEmitEvent.IFRAME_CLOSED, () => {
+      console.log("Cashier closed");
+    });
+  });
+
+  onDestroy(() => {
+    cashier?.destroy();
+  });
+
+  // 3. Actions
+  const openModal = () => {
+    cashier.open(sessionId);
+  }
+
+  const openInContainer = () => {
+    cashier.open(sessionId, "cashier-slot");
+  }
+
+</script>
+
+<h2>Cashier SDK Demo</h2>
+
+<div class="actions">
+  <button onclick={openModal}>Open (Modal)</button>
+  <button onclick={openInContainer}>Open in Container</button>
+</div>
+
+<!-- Container example -->
+<div id="cashier-slot" class="cashier-slot"></div>
+
+<style lang="scss">
+  .actions {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .cashier-slot {
+    border: 2px dashed #aaa;
+    height: 500px;
+    width: 100%;
+    position: relative;
+  }
+</style>
+```
+### Events
+
+| **Event**              | **Payload Type**              | **Description**                                                                  |
+|------------------------|-------------------------------|----------------------------------------------------------------------------------|
+| `iframeOpened`         | `{ sessionId: string }`       | Fired when the cashier iframe has been successfully opened with a given session. |
+| `iframeClosed`         | `void`                        | Fired when the iframe has been closed.                                           |
+| `iframeDestroyed`      | `void`                        | Fired when the iframe has been completely removed from the DOM.                  |
+| `iframeOpenRequested`  | `void`                        | Fired when an iframe open request is initiated.                                  |
+| `iframeCloseRequested` | `void`                        | Fired when an iframe close request is initiated.                                 |
+| `cashierLoaded`        | `void`                        | Fired once the cashier UI has finished loading.                                  |
+| `liveChatClicked`      | `void`                        | Fired when the “Live Chat” button is clicked inside the cashier.                 |
+| `paymentSuccess`       | `PaymentEmitEventData`        | Fired when a payment succeeds.                                                   |
+| `paymentFailed`        | `PaymentEmitEventData`        | Fired when a payment fails.                                                      |
+| `paymentPending`       | `PaymentEmitEventData`        | Fired when a payment is pending.                                                 |
+| `paymentCanceled`      | `PaymentEmitEventData`        | Fired when a payment is canceled by the user.                                    |

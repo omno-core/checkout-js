@@ -54,11 +54,6 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
     const { type, data } = event.data ?? {};
 
     switch (type) {
-      case CashierMessageType.OPEN_IFRAME:
-        this.emit(CashierEmitEvent.IFRAME_OPEN_REQUESTED, data);
-        this.close();
-        break;
-
       case CashierMessageType.CLOSE_IFRAME:
         this.emit(CashierEmitEvent.IFRAME_CLOSE_REQUESTED, data);
         this.close();
@@ -73,6 +68,10 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
           "*"
         );
         this.emit(CashierEmitEvent.CASHIER_LOADED, data);
+        break;
+
+      case CashierMessageType.LIVE_CHAT_CLICK:
+        this.emit(CashierEmitEvent.LIVE_CHAT_CLICKED, data);
         break;
 
       case CashierMessageType.PAYMENT_SUCCESS:
@@ -121,6 +120,7 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
   }
 
   open(sessionId: string, containerId?: string) {
+    this.emit(CashierEmitEvent.IFRAME_OPEN_REQUESTED, undefined);
     if (this.isOpen() && this.currentSessionId === sessionId) return;
     if (this.isOpen()) this.close();
 

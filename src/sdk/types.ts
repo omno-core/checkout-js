@@ -2,9 +2,9 @@ import { ENV_CONFIG } from "../env";
 
 // message given to cashierSdk
 export enum CashierMessageType {
-  OPEN_IFRAME = "OPEN_IFRAME",
   CLOSE_IFRAME = "CLOSE_IFRAME",
   CASHIER_LOADED = "CASHIER_LOADED",
+  LIVE_CHAT_CLICK = 'LIVE_CHAT_CLICK',
 
   PAYMENT_SUCCESS = "PAYMENT_SUCCESS",
   PAYMENT_FAILED = "PAYMENT_FAILED",
@@ -20,6 +20,7 @@ export enum CashierEmitEvent {
   IFRAME_OPEN_REQUESTED = "iframeOpenRequested",
   IFRAME_CLOSE_REQUESTED = "iframeCloseRequested",
   CASHIER_LOADED = "cashierLoaded",
+  LIVE_CHAT_CLICKED = "liveChatClicked",
 
   PAYMENT_SUCCESS = "paymentSuccess",
   PAYMENT_FAILED = "paymentFailed",
@@ -37,6 +38,7 @@ export type CashierEventMap = {
   [CashierEmitEvent.IFRAME_OPEN_REQUESTED]: void;
   [CashierEmitEvent.IFRAME_CLOSE_REQUESTED]: void;
   [CashierEmitEvent.CASHIER_LOADED]: void;
+  [CashierEmitEvent.LIVE_CHAT_CLICKED]: void;
 
   [CashierEmitEvent.PAYMENT_SUCCESS]: PaymentEmitEventData;
   [CashierEmitEvent.PAYMENT_FAILED]: PaymentEmitEventData;
