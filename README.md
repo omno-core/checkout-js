@@ -1,6 +1,7 @@
 # Cashier SDK
 
-A modern, framework-agnostic JavaScript SDK for integrating payment processing with customizable iframe-based cashier interfaces. Built with TypeScript for type safety and enhanced developer experience.
+A modern, framework-agnostic JavaScript SDK for integrating payment processing with customizable iframe-based cashier
+interfaces. Built with TypeScript for type safety and enhanced developer experience.
 
 ## Features
 
@@ -15,45 +16,37 @@ A modern, framework-agnostic JavaScript SDK for integrating payment processing w
 ## Installation
 
 ```bash
-npm install cashier-sdk
+npm install @omno-payment/checkout-js
 ```
 
 ```bash
-yarn add cashier-sdk
+yarn add @omno-payment/checkout-js
 ```
 
 ```bash
-pnpm add cashier-sdk
+pnpm add @omno-payment/checkout-js
 ```
 
 ## Quick Start
 
 ```typescript
-import { CashierSDK } from 'cashier-sdk';
+import CashierSDK from "@omno-payment/checkout-js";
 
-const cashier = new CashierSDK({
-  apiBaseUrl: 'https://api.yourpaymentprovider.com',
-  borderRadius: '12px',
-  backgroundColor: '#ffffff',
-  device: 'auto'
-});
+const cashier = new CashierSDK();
 
 // Handle payment success
-cashier.on('paymentSuccess', (data) => {
-  console.log('Payment completed!', data);
-  // Redirect to success page
-  window.location.href = '/success';
+cashier.on(CashierEmitEvent.PAYMENT_SUCCESS, (data) => {
+  console.log("✅ Payment success", data);
 });
 
-// Handle payment errors
-cashier.on('paymentError', (error) => {
-  console.error('Payment failed:', error);
-  alert('Payment failed. Please try again.');
+// Handle payment fails
+cashier.on(CashierEmitEvent.PAYMENT_FAILED, (data) => {
+  console.error("❌ Payment failed", data);
 });
 
 // Open payment interface
-const paymentUrl = 'https://api.yourpaymentprovider.com/checkout/session-123';
-cashier.openPaymentIframe(paymentUrl);
+const sessionId = "cashier_session_id";
+cashier.open(sessionId);
 ```
 
 ## Configuration
@@ -61,23 +54,68 @@ cashier.openPaymentIframe(paymentUrl);
 ### CashierConfig Interface
 
 ```typescript
-interface CashierConfig {
-  apiBaseUrl: string;           // Required: Your payment API base URL
-  borderRadius?: string;        // Optional: CSS border radius (default: '8px')
-  backgroundColor?: string;     // Optional: Background color (default: '#ffffff')
-  device?: 'desktop' | 'mobile' | 'auto'; // Optional: Device targeting (default: 'auto')
+interface CashierProperties {
+  environment?: Environment;
+  device?: DeviceType;
+  styles?: CashierStyles;
+}
+
+type Environment = "sandbox" | "production"
+
+enum DeviceType {
+  DESKTOP = 'DESKTOP',
+  MOBILE = 'MOBILE',
+  AUTO = 'AUTO'
+}
+
+// styles
+interface CashierStyles {
+  modal?: ModalStyles;
+  mobile?: MobileStyles;
+}
+
+interface ModalStyles {
+  backgroundColor?: string;
+  width?: string;
+  height?: string;
+  borderRadius?: string;
+  zIndex?: number;
+}
+
+interface MobileStyles {
+  backgroundColor?: string;
+  zIndex?: number;
 }
 ```
 
-### Example Configuration
+### Example/Default Configuration
 
 ```typescript
+import {
+  DeviceType,
+  type ModalStyles,
+  type MobileStyles,
+  CashierEmitEvent,
+  type CashierProperties
+} from "@omno-payment/checkout-js";
+
 const config = {
-  apiBaseUrl: 'https://payments.example.com',
-  borderRadius: '16px',
-  backgroundColor: '#f8fafc',
-  device: 'auto'
-};
+  device: DeviceType.AUTO,
+  environment: 'sandbox' as Environment,
+  styles: {
+    modal: {
+      backgroundColor: "rgba(0,0,0,0.4)",
+      width: "900px",
+      height: "600px",
+      borderRadius: "12px",
+      zIndex: 12000
+    } as ModalStyles,
+    mobile: {
+      backgroundColor: "rgba(0,0,0,0.4)",
+      zIndex: 15000
+    } as MobileStyles,
+  }
+} as CashierProperties;
 
 const cashier = new CashierSDK(config);
 ```
@@ -89,85 +127,40 @@ The SDK provides a comprehensive event system to handle the entire payment lifec
 ### Payment Lifecycle Events
 
 ```typescript
-// Payment completed successfully
-cashier.on('paymentSuccess', (data) => {
-  console.log('Payment successful:', data);
-  // data contains: transactionId, amount, currency, orderId, etc.
+cashier.on(CashierEmitEvent.PAYMENT_SUCCESS, (data) => {
+  console.log("✅ Payment success", data);
 });
 
-// Payment failed or error occurred
-cashier.on('paymentError', (error) => {
-  console.log('Payment error:', error);
-  // error contains: message, code, details
+cashier.on(CashierEmitEvent.PAYMENT_FAILED, (data) => {
+  console.error("❌ Payment failed", data);
 });
 
-// User canceled payment from within the cashier
-cashier.on('paymentCanceled', (data) => {
-  console.log('Payment canceled:', data);
+cashier.on(CashierEmitEvent.PAYMENT_PENDING, (data) => {
+  console.log("⏳ Payment pending", data);
 });
 
-// Payment is being processed (loading state)
-cashier.on('paymentProcessing', (data) => {
-  console.log('Payment processing:', data);
-  // Show loading spinner, disable buttons
-});
-```
-
-### User Interaction Events
-
-```typescript
-// User closed the iframe (X button, backdrop, or escape key)
-cashier.on('userCanceled', (data) => {
-  console.log('User canceled:', data.reason);
-  // Possible reasons:
-  // - 'close_button_clicked' - User clicked X button
-  // - 'backdrop_clicked' - User clicked outside modal (desktop only)
-  // - 'escape_key' - User pressed Escape key
-});
-
-// Cashier requested to close the iframe
-cashier.on('iframeCloseRequested', (data) => {
-  console.log('Cashier requested close:', data);
+cashier.on(CashierEmitEvent.PAYMENT_CANCELED, (data) => {
+  console.warn("⚠️ Payment canceled", data);
 });
 ```
 
 ### Iframe Lifecycle Events
 
 ```typescript
-// Iframe was opened
-cashier.on('iframeOpened', (data) => {
-  console.log('Iframe opened:', data.iframe, data.device);
-  // Show loading indicator
+cashier.on(CashierEmitEvent.IFRAME_OPENED, ({ sessionId }) => {
+  console.log("Cashier opened with session:", sessionId);
 });
 
-// Iframe was closed
-cashier.on('iframeClosed', () => {
-  console.log('Iframe closed');
-  // Clean up, hide loading indicators
+cashier.on(CashierEmitEvent.CASHIER_LOADED, () => {
+  console.log("Cashier finished loading");
 });
 
-// Cashier page loaded inside iframe
-cashier.on('cashierLoaded', (data) => {
-  console.log('Cashier loaded:', data);
-  // Payment form is ready for user interaction
-});
-```
-
-### Navigation Events
-
-```typescript
-// Payment requires redirect (3D Secure, bank redirect, etc.)
-cashier.on('paymentRedirect', (data) => {
-  console.log('Payment redirect:', data);
-  // Handle redirect if needed
-  if (data.redirectUrl) {
-    window.location.href = data.redirectUrl;
-  }
+cashier.on(CashierEmitEvent.IFRAME_CLOSED, () => {
+  console.log("Cashier iframe closed");
 });
 
-// Custom events from your cashier implementation
-cashier.on('customEvent', (event) => {
-  console.log('Custom event:', event.type, event.data);
+cashier.on(CashierEmitEvent.IFRAME_DESTROYED, () => {
+  console.log("Cashier destroyed");
 });
 ```
 
@@ -176,252 +169,51 @@ cashier.on('customEvent', (event) => {
 ### Core Methods
 
 ```typescript
-// Open payment iframe
-const iframe = cashier.openPaymentIframe(paymentUrl, containerId?);
+// Open Cashier (modal by default)
+cashier.open(sessionId);
 
-// Close payment iframe
-cashier.closePaymentIframe();
+// Open Cashier in a specific container
+cashier.open(sessionId, "your_container_id");
 
-// Clean up resources
+// Close cashier
+cashier.close();
+
+// Destroy the cashier instance completely
 cashier.destroy();
-```
-
-### Event Management
-
-```typescript
-// Add event listener
-cashier.on('eventName', callback);
-
-// Remove event listener
-cashier.off('eventName', callback?);
 ```
 
 ### Utility Methods
 
 ```typescript
 // Generate unique order ID
-const orderId = cashier.generateOrderId();
+cashier.isOpen();
 
 // Get current device type
-const device = cashier.getDevice(); // 'desktop' | 'mobile'
+cashier.getDeviceType();
 
-// Update device detection (useful for responsive design)
-cashier.updateDevice();
+// Get current session Id
+cashier.getSessionId();
 ```
 
-## Framework Examples
+## Mobile Optimization
 
-The SDK works seamlessly with all modern JavaScript frameworks. Check out the `/examples` directory for complete implementations:
+The SDK automatically detects mobile devices and adjusts the interface accordingly:
 
-### React Example
+- **Desktop**: Modal overlay with backdrop and close button
+- **Mobile**: Full-screen interface optimized for touch interaction
+
+You can override device detection:
 
 ```typescript
-import React, { useEffect, useState } from 'react';
-import { CashierSDK } from 'cashier-sdk';
-
-const PaymentComponent = () => {
-  const [cashier, setCashier] = useState<CashierSDK | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-
-  useEffect(() => {
-    const sdk = new CashierSDK({
-      apiBaseUrl: 'https://api.example.com'
-    });
-
-    sdk.on('paymentSuccess', (data) => {
-      console.log('Payment successful!', data);
-      setIsProcessing(false);
-    });
-
-    sdk.on('paymentError', (error) => {
-      console.error('Payment failed:', error);
-      setIsProcessing(false);
-    });
-
-    sdk.on('paymentProcessing', () => {
-      setIsProcessing(true);
-    });
-
-    setCashier(sdk);
-
-    return () => sdk.destroy();
-  }, []);
-
-  const handlePayment = () => {
-    if (cashier) {
-      const paymentUrl = 'https://api.example.com/checkout/session-123';
-      cashier.openPaymentIframe(paymentUrl);
-    }
-  };
-
-  return (
-    <div>
-      <button onClick={handlePayment} disabled={isProcessing}>
-        {isProcessing ? 'Processing...' : 'Pay Now'}
-      </button>
-    </div>
-  );
-};
-
-export default PaymentComponent;
-```
-
-### Vue 3 Example
-
-```vue
-<template>
-  <div>
-    <button @click="handlePayment" :disabled="isProcessing">
-      {{ isProcessing ? 'Processing...' : 'Pay Now' }}
-    </button>
-  </div>
-</template>
-
-<script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
-import { CashierSDK } from 'cashier-sdk';
-
-const cashier = ref(null);
-const isProcessing = ref(false);
-
-onMounted(() => {
-  const sdk = new CashierSDK({
-    apiBaseUrl: 'https://api.example.com'
-  });
-
-  sdk.on('paymentSuccess', (data) => {
-    console.log('Payment successful!', data);
-    isProcessing.value = false;
-  });
-
-  sdk.on('paymentError', (error) => {
-    console.error('Payment failed:', error);
-    isProcessing.value = false;
-  });
-
-  sdk.on('paymentProcessing', () => {
-    isProcessing.value = true;
-  });
-
-  cashier.value = sdk;
+const cashier = new CashierSDK({
+  apiBaseUrl: 'https://api.example.com',
+  device: 'mobile' // Force mobile layout
 });
-
-onUnmounted(() => {
-  if (cashier.value) {
-    cashier.value.destroy();
-  }
-});
-
-const handlePayment = () => {
-  if (cashier.value) {
-    const paymentUrl = 'https://api.example.com/checkout/session-123';
-    cashier.value.openPaymentIframe(paymentUrl);
-  }
-};
-</script>
 ```
 
-### Angular Example
+## Security
 
-```typescript
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { CashierSDK } from 'cashier-sdk';
-
-@Component({
-  selector: 'app-payment',
-  template: `
-    <button (click)="handlePayment()" [disabled]="isProcessing">
-      {{ isProcessing ? 'Processing...' : 'Pay Now' }}
-    </button>
-  `
-})
-export class PaymentComponent implements OnInit, OnDestroy {
-  private cashier: CashierSDK | null = null;
-  isProcessing = false;
-
-  ngOnInit() {
-    this.cashier = new CashierSDK({
-      apiBaseUrl: 'https://api.example.com'
-    });
-
-    this.cashier.on('paymentSuccess', (data) => {
-      console.log('Payment successful!', data);
-      this.isProcessing = false;
-    });
-
-    this.cashier.on('paymentError', (error) => {
-      console.error('Payment failed:', error);
-      this.isProcessing = false;
-    });
-
-    this.cashier.on('paymentProcessing', () => {
-      this.isProcessing = true;
-    });
-  }
-
-  ngOnDestroy() {
-    if (this.cashier) {
-      this.cashier.destroy();
-    }
-  }
-
-  handlePayment() {
-    if (this.cashier) {
-      const paymentUrl = 'https://api.example.com/checkout/session-123';
-      this.cashier.openPaymentIframe(paymentUrl);
-    }
-  }
-}
-```
-
-### Svelte Example
-
-```svelte
-<script>
-  import { onMount, onDestroy } from 'svelte';
-  import { CashierSDK } from 'cashier-sdk';
-
-  let cashier = null;
-  let isProcessing = false;
-
-  onMount(() => {
-    cashier = new CashierSDK({
-      apiBaseUrl: 'https://api.example.com'
-    });
-
-    cashier.on('paymentSuccess', (data) => {
-      console.log('Payment successful!', data);
-      isProcessing = false;
-    });
-
-    cashier.on('paymentError', (error) => {
-      console.error('Payment failed:', error);
-      isProcessing = false;
-    });
-
-    cashier.on('paymentProcessing', () => {
-      isProcessing = true;
-    });
-  });
-
-  onDestroy(() => {
-    if (cashier) {
-      cashier.destroy();
-    }
-  });
-
-  const handlePayment = () => {
-    if (cashier) {
-      const paymentUrl = 'https://api.example.com/checkout/session-123';
-      cashier.openPaymentIframe(paymentUrl);
-    }
-  };
-</script>
-
-<button on:click={handlePayment} disabled={isProcessing}>
-  {isProcessing ? 'Processing...' : 'Pay Now'}
-</button>
-```
+The SDK includes several security features:
 
 ## Cashier Integration
 
@@ -474,26 +266,6 @@ window.parent.postMessage({
 - `CASHIER_LOADED` - Cashier interface loaded
 - `IFRAME_CLOSE` / `CLOSE_IFRAME` - Request to close iframe
 
-## Mobile Optimization
-
-The SDK automatically detects mobile devices and adjusts the interface accordingly:
-
-- **Desktop**: Modal overlay with backdrop and close button
-- **Mobile**: Full-screen interface optimized for touch interaction
-
-You can override device detection:
-
-```typescript
-const cashier = new CashierSDK({
-  apiBaseUrl: 'https://api.example.com',
-  device: 'mobile' // Force mobile layout
-});
-```
-
-## Security
-
-The SDK includes several security features:
-
 - **Origin Validation**: Only accepts messages from your configured API domain
 - **Sandbox Attributes**: Iframe is sandboxed with minimal required permissions
 - **Error Handling**: All event handlers are wrapped in try-catch blocks
@@ -512,24 +284,23 @@ The SDK includes several security features:
 The SDK is built with TypeScript and includes full type definitions:
 
 ```typescript
-import { CashierSDK, CashierConfig, PaymentEventData } from 'cashier-sdk';
+import CashierSDK, {
+  DeviceType,
+  CashierEmitEvent,
+  type Environment,
+  type CashierProperties,
+  type PaymentEmitEventData
+} from "@omno-payment/checkout-js";
 
-const config: CashierConfig = {
-  apiBaseUrl: 'https://api.example.com'
+const config: CashierProperties = {
+  device: DeviceType.AUTO,
+  environment: 'sandbox' as Environment,
 };
 
 const cashier = new CashierSDK(config);
 
-cashier.on('paymentSuccess', (data: PaymentEventData) => {
+cashier.on(CashierEmitEvent.PAYMENT_SUCCESS, (data: PaymentEmitEventData) => {
   // Full type safety
-  console.log(data.transactionId);
+  console.log("✅ Payment success", data);
 });
 ```
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
