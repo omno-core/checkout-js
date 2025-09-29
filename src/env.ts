@@ -6,5 +6,3 @@ export const ENV_CONFIG = {
     checkoutBase: "https://checkout.omno.com/payments-v2/cashier",
   },
 } as const;
-
-export type Environment = keyof typeof ENV_CONFIG;

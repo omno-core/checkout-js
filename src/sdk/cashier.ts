@@ -147,7 +147,8 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
 
   close() {
     if (this.container) {
-      if (this.container.classList.contains("cashier-modal-overlay")) {
+      if (this.container.classList.contains("cashier-modal-overlay") ||
+        this.container.classList.contains("cashier-mobile-overlay")) {
         this.container.remove();
       } else if (this.container === document.body && this.iframe) {
         this.iframe.remove();

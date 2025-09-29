@@ -108,11 +108,11 @@ const config = {
       width: "900px",
       height: "600px",
       borderRadius: "12px",
-      zIndex: 12000
+      zIndex: 9
     } as ModalStyles,
     mobile: {
       backgroundColor: "rgba(0,0,0,0.4)",
-      zIndex: 15000
+      zIndex: 10
     } as MobileStyles,
   }
 } as CashierProperties;

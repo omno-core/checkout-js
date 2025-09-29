@@ -1,4 +1,4 @@
-import type { Environment } from "../env.ts";
+import { ENV_CONFIG } from "../env";
 
 // message given to cashierSdk
 export enum CashierMessageType {
@@ -77,6 +77,8 @@ export enum DeviceType {
   MOBILE = 'MOBILE',
   AUTO = 'AUTO'
 }
+
+export type Environment = keyof typeof ENV_CONFIG;
 
 // styles
 export interface ModalStyles {
