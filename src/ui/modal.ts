@@ -1,12 +1,13 @@
 import type { ModalStyles } from "../sdk/types";
+import { DEFAULT_MODAL_STYLES } from "./data";
 
 export function mountModal(url: string, styles: ModalStyles = {}): HTMLDivElement {
   const {
-    backgroundColor = "rgba(0,0,0,0.5)",
-    width = "80%",
-    height = "60%",
-    borderRadius = "8px",
-    zIndex = 9999,
+    backgroundColor = DEFAULT_MODAL_STYLES.backgroundColor,
+    width = DEFAULT_MODAL_STYLES.width,
+    height = DEFAULT_MODAL_STYLES.height,
+    borderRadius = DEFAULT_MODAL_STYLES.borderRadius,
+    zIndex = DEFAULT_MODAL_STYLES.zIndex,
   } = styles;
 
   const overlay = document.createElement("div");

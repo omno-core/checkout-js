@@ -1,7 +1,11 @@
 import type { MobileStyles } from "../sdk/types";
+import { DEFAULT_MOBILE_STYLES } from "./data";
 
 export function mountMobile(url: string, styles: MobileStyles = {}): HTMLDivElement {
-  const { backgroundColor = "#000", zIndex = 9999 } = styles;
+  const {
+    backgroundColor = DEFAULT_MOBILE_STYLES.backgroundColor,
+    zIndex = DEFAULT_MOBILE_STYLES.zIndex
+  } = styles;
 
   const wrapper = document.createElement("div");
   wrapper.classList.add("cashier-mobile-overlay");
