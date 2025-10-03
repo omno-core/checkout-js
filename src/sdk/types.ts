@@ -10,6 +10,8 @@ export enum CashierMessageType {
   PAYMENT_FAILED = "PAYMENT_FAILED",
   PAYMENT_PENDING = "PAYMENT_PENDING",
   PAYMENT_CANCELED = "PAYMENT_CANCELED",
+
+  MOBILE_OVERLAY_CLICKED = "MOBILE_OVERLAY_CLICKED",
 }
 
 // message emitted by cashierSdk
@@ -21,6 +23,7 @@ export enum CashierEmitEvent {
   IFRAME_CLOSE_REQUESTED = "iframeCloseRequested",
   CASHIER_LOADED = "cashierLoaded",
   LIVE_CHAT_CLICKED = "liveChatClicked",
+  OVERLAY_CLICKED = "overlayClicked",
 
   PAYMENT_SUCCESS = "paymentSuccess",
   PAYMENT_FAILED = "paymentFailed",
@@ -39,6 +42,7 @@ export type CashierEventMap = {
   [CashierEmitEvent.IFRAME_CLOSE_REQUESTED]: void;
   [CashierEmitEvent.CASHIER_LOADED]: void;
   [CashierEmitEvent.LIVE_CHAT_CLICKED]: void;
+  [CashierEmitEvent.OVERLAY_CLICKED]: void;
 
   [CashierEmitEvent.PAYMENT_SUCCESS]: PaymentEmitEventData;
   [CashierEmitEvent.PAYMENT_FAILED]: PaymentEmitEventData;
@@ -59,6 +63,7 @@ export type PaymentEmitEventData = {
 // cashierSdk to iframe message
 export enum CashierParentMessageType {
   SET_DEVICE = "SET_DEVICE",
+  SET_OPENED_IN = "SET_OPENED_IN",
 }
 
 // cashierSdk Properties
@@ -80,6 +85,11 @@ export enum DeviceType {
   AUTO = 'AUTO'
 }
 
+export enum PaymentAction {
+  DEPOSIT = 'DEPOSIT',
+  WITHDRAW = 'WITHDRAW',
+}
+
 export type Environment = keyof typeof ENV_CONFIG;
 
 // styles
@@ -99,4 +109,11 @@ export interface MobileStyles {
 export interface CashierStyles {
   modal?: ModalStyles;
   mobile?: MobileStyles;
+}
+
+// event properties
+export type openCashierParameters = {
+  sessionId: string;
+  containerId?: string;
+  paymentAction?: PaymentAction | undefined;
 }

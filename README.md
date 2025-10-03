@@ -179,6 +179,10 @@ cashier.on(CashierEmitEvent.IFRAME_DESTROYED, () => {
 cashier.on(CashierEmitEvent.LIVE_CHAT_CLICKED, () => {
   console.log("Live chat clicked");
 });
+
+cashier.on(CashierEmitEvent.OVERLAY_CLICKED, () => {
+  console.log("Clicked outside of the cashier");
+});
 ```
 
 ## Methods
@@ -187,10 +191,13 @@ cashier.on(CashierEmitEvent.LIVE_CHAT_CLICKED, () => {
 
 ```typescript
 // Open Cashier (modal by default)
-cashier.open(sessionId);
+cashier.open({ sessionId });
 
 // Open Cashier in a specific container
-cashier.open(sessionId, "your_container_id");
+cashier.open({ sessionId, containerId: "your-container-id" });
+
+// Open Cashier with a specific payment action: Withdraw or Deposit
+cashier.open({ sessionId, paymentAction: PaymentAction.WITHDRAW });
 
 // Close cashier
 cashier.close();
@@ -305,11 +312,11 @@ cashier.on(CashierEmitEvent.PAYMENT_SUCCESS, (data: PaymentEmitEventData) => {
 
   // 3. Actions
   const openModal = () => {
-    cashier.open(sessionId);
+    cashier.open({ sessionId });
   }
 
   const openInContainer = () => {
-    cashier.open(sessionId, "cashier-slot");
+    cashier.open({ sessionId, containerId: "cashier-slot" });
   }
 
 </script>
@@ -339,18 +346,20 @@ cashier.on(CashierEmitEvent.PAYMENT_SUCCESS, (data: PaymentEmitEventData) => {
   }
 </style>
 ```
+
 ### Events
 
-| **Event**              | **Payload Type**              | **Description**                                                                  |
-|------------------------|-------------------------------|----------------------------------------------------------------------------------|
-| `iframeOpened`         | `{ sessionId: string }`       | Fired when the cashier iframe has been successfully opened with a given session. |
-| `iframeClosed`         | `void`                        | Fired when the iframe has been closed.                                           |
-| `iframeDestroyed`      | `void`                        | Fired when the iframe has been completely removed from the DOM.                  |
-| `iframeOpenRequested`  | `void`                        | Fired when an iframe open request is initiated.                                  |
-| `iframeCloseRequested` | `void`                        | Fired when an iframe close request is initiated.                                 |
-| `cashierLoaded`        | `void`                        | Fired once the cashier UI has finished loading.                                  |
-| `liveChatClicked`      | `void`                        | Fired when the “Live Chat” button is clicked inside the cashier.                 |
-| `paymentSuccess`       | `PaymentEmitEventData`        | Fired when a payment succeeds.                                                   |
-| `paymentFailed`        | `PaymentEmitEventData`        | Fired when a payment fails.                                                      |
-| `paymentPending`       | `PaymentEmitEventData`        | Fired when a payment is pending.                                                 |
-| `paymentCanceled`      | `PaymentEmitEventData`        | Fired when a payment is canceled by the user.                                    |
+| **Event**              | **Payload Type**        | **Description**                                                                  |
+|------------------------|-------------------------|----------------------------------------------------------------------------------|
+| `iframeOpened`         | `{ sessionId: string }` | Fired when the cashier iframe has been successfully opened with a given session. |
+| `iframeClosed`         | `void`                  | Fired when the iframe has been closed.                                           |
+| `iframeDestroyed`      | `void`                  | Fired when the iframe has been completely removed from the DOM.                  |
+| `iframeOpenRequested`  | `void`                  | Fired when an iframe open request is initiated.                                  |
+| `iframeCloseRequested` | `void`                  | Fired when an iframe close request is initiated.                                 |
+| `cashierLoaded`        | `void`                  | Fired once the cashier UI has finished loading.                                  |
+| `liveChatClicked`      | `void`                  | Fired when the “Live Chat” button is clicked inside the cashier.                 |
+| `overlayClicked`       | `void`                  | Fired when the overlay/outside cashier is clicked.                               |
+| `paymentSuccess`       | `PaymentEmitEventData`  | Fired when a payment succeeds.                                                   |
+| `paymentFailed`        | `PaymentEmitEventData`  | Fired when a payment fails.                                                      |
+| `paymentPending`       | `PaymentEmitEventData`  | Fired when a payment is pending.                                                 |
+| `paymentCanceled`      | `PaymentEmitEventData`  | Fired when a payment is canceled by the user.                                    |

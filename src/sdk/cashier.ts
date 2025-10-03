@@ -8,7 +8,7 @@ import {
   type CashierEventMap,
   CashierMessageType, CashierParentMessageType,
   type CashierProperties,
-  DeviceType, type PaymentEmitEventData, type ResolvedCashierProperties
+  DeviceType, type openCashierParameters, PaymentAction, type PaymentEmitEventData, type ResolvedCashierProperties
 } from "./types";
 import { CashierError, CashierErrorCode } from "../util/cashier-error";
 import { DEFAULT_MOBILE_STYLES, DEFAULT_MODAL_STYLES } from "../ui/data";
@@ -16,11 +16,12 @@ import { DEFAULT_MOBILE_STYLES, DEFAULT_MODAL_STYLES } from "../ui/data";
 export class CashierSDK extends EventEmitter<CashierEventMap> {
   private iframe?: HTMLIFrameElement;
   private container?: HTMLElement;
+  private isOpenedIn?: "Container" | "Modal";
   private currentSessionId?: string;
   private cashierProperties: ResolvedCashierProperties;
   private readonly boundMessageHandler: (event: MessageEvent) => void;
 
-  constructor(options: CashierProperties = {}) {
+  constructor(options: CashierProperties) {
     super();
     this.cashierProperties = {
       environment: options.environment ?? "production",
@@ -30,7 +31,6 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
         mobile: { ...DEFAULT_MOBILE_STYLES, ...options.styles?.mobile },
       },
     };
-
 
     if (options.device && options.device !== DeviceType.AUTO) {
       this.cashierProperties.device = options.device;
@@ -64,7 +64,17 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
           return;
         }
         this.iframe.contentWindow.postMessage(
-          { type: CashierParentMessageType.SET_DEVICE, data: { device: this.cashierProperties.device } },
+          {
+            type: CashierParentMessageType.SET_DEVICE,
+            data: { device: this.cashierProperties.device }
+          },
+          "*"
+        );
+        this.iframe.contentWindow.postMessage(
+          {
+            type: CashierParentMessageType.SET_OPENED_IN,
+            data: { openedIn: this.isOpenedIn }
+          },
           "*"
         );
         this.emit(CashierEmitEvent.CASHIER_LOADED, data);
@@ -88,6 +98,10 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
 
       case CashierMessageType.PAYMENT_CANCELED:
         this.emit(CashierEmitEvent.PAYMENT_CANCELED, data as PaymentEmitEventData);
+        break;
+
+      case CashierMessageType.MOBILE_OVERLAY_CLICKED:
+        this.emit(CashierEmitEvent.OVERLAY_CLICKED, undefined);
         break;
 
       default:
@@ -114,17 +128,21 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
     return isMobile ? DeviceType.MOBILE : DeviceType.DESKTOP;
   }
 
-  private buildUrl(sessionId: string): string {
+  private buildUrl(sessionId: string, paymentAction: PaymentAction | undefined): string {
     const { checkoutBase } = ENV_CONFIG[this.cashierProperties.environment];
-    return `${checkoutBase}/${sessionId}`;
+    const suffix = paymentAction ? paymentAction.toLowerCase() : undefined;
+    return suffix ? `${checkoutBase}/${sessionId}/${suffix}` : `${checkoutBase}/${sessionId}`;
   }
 
-  open(sessionId: string, containerId?: string) {
+  open({ sessionId, containerId, paymentAction }: openCashierParameters) {
     this.emit(CashierEmitEvent.IFRAME_OPEN_REQUESTED, undefined);
     if (this.isOpen() && this.currentSessionId === sessionId) return;
     if (this.isOpen()) this.close();
 
-    const url = this.buildUrl(sessionId);
+    const url = this.buildUrl(sessionId, paymentAction);
+
+    if (containerId) this.isOpenedIn = "Container";
+    else this.isOpenedIn = "Modal"
 
     try {
       if (containerId) {
@@ -136,6 +154,13 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
       } else {
         this.container = mountModal(url, this.cashierProperties.styles?.modal);
         this.iframe = this.container.querySelector("iframe") ?? undefined;
+      }
+
+      // click listener for modal
+      if (this.container?.classList.contains("cashier-modal-overlay")) {
+        this.container.addEventListener("click", () => {
+          this.emit(CashierEmitEvent.OVERLAY_CLICKED, undefined);
+        });
       }
 
       this.currentSessionId = sessionId;

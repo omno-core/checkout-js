@@ -1,12 +1,31 @@
-import { CashierEmitEvent, DeviceType } from "../sdk/types";
-import { CashierSDK } from "../sdk/cashier";
+// import CashierSDK, {
+//   DeviceType,
+//   type ModalStyles,
+//   type MobileStyles,
+//   CashierEmitEvent,
+//   type CashierProperties,
+//   type PaymentEmitEventData,
+//   type Environment
+// } from "@omno-payment/checkout-js";
 
-const sessionId = "94c78160-81b7-43ef-b4ca-e64519047b8d";
+import { CashierSDK } from "../sdk/cashier";
+import {
+  CashierEmitEvent,
+  type CashierProperties,
+  DeviceType,
+  type Environment,
+  type MobileStyles,
+  type ModalStyles,
+  PaymentAction,
+  type PaymentEmitEventData
+} from "../sdk/types";
+
+const sessionId = "bd4dffdf-23e4-4e1a-baf6-b48c09627c62";
 
 // 1. Initialize SDK
 const cashier = new CashierSDK({
   device: DeviceType.AUTO,
-  environment: "sandbox",
+  environment: 'sandbox' as Environment,
   styles: {
     modal: {
       backgroundColor: "rgba(0,0,0,0.4)",
@@ -14,13 +33,13 @@ const cashier = new CashierSDK({
       height: "600px",
       borderRadius: "12px",
       zIndex: 9
-    },
+    } as ModalStyles,
     mobile: {
       backgroundColor: "rgba(0,0,0,0.4)",
       zIndex: 10
-    }
+    } as MobileStyles,
   }
-});
+} as CashierProperties);
 
 // 2. Register listeners
 cashier.on(CashierEmitEvent.IFRAME_OPEN_REQUESTED, () => {
@@ -35,7 +54,7 @@ cashier.on(CashierEmitEvent.CASHIER_LOADED, () => {
   console.log("Cashier finished loading");
 });
 
-cashier.on(CashierEmitEvent.PAYMENT_SUCCESS, (data) => {
+cashier.on(CashierEmitEvent.PAYMENT_SUCCESS, (data: PaymentEmitEventData) => {
   console.log("✅ Payment success", data);
 });
 
@@ -67,22 +86,31 @@ cashier.on(CashierEmitEvent.LIVE_CHAT_CLICKED, () => {
   console.log("Live chat clicked");
 });
 
+cashier.on(CashierEmitEvent.OVERLAY_CLICKED, () => {
+  console.log("Clicked outside of the cashier");
+});
+
 // 3. Open Cashier (modal by default)
 document.getElementById("btn-open")?.addEventListener("click", () => {
-  cashier.open(sessionId);
+  cashier.open({ sessionId });
 });
 
 // 4. Open Cashier in a specific container
 document.getElementById("btn-container")?.addEventListener("click", () => {
-  cashier.open(sessionId, "cashier-slot");
+  cashier.open({ sessionId, containerId: "your-container-id" });
 });
 
-// 5. Close cashier
+// 5. Open Cashier with a specific payment action: Withdraw or Deposit
+document.getElementById("btn-container")?.addEventListener("click", () => {
+  cashier.open({ sessionId, paymentAction: PaymentAction.WITHDRAW });
+});
+
+// 6. Close cashier
 document.getElementById("btn-close")?.addEventListener("click", () => {
   cashier.close();
 });
 
-// 6. Destroy the cashier instance completely
+// 7. Destroy the cashier instance completely
 document.getElementById("btn-destroy")?.addEventListener("click", () => {
   cashier.destroy();
 });

@@ -45,11 +45,11 @@
 
   // 3. Actions
   const openModal = () => {
-    cashier.open(sessionId);
+    cashier.open({ sessionId });
   }
 
   const openInContainer = () => {
-    cashier.open(sessionId, "cashier-slot");
+    cashier.open({ sessionId, containerId: "your-container-id" });
   }
 
 </script>
