@@ -6,9 +6,14 @@ import { EventEmitter } from "../util/event-emitter";
 import {
   CashierEmitEvent,
   type CashierEventMap,
-  CashierMessageType, CashierParentMessageType,
+  CashierMessageType,
+  CashierParentMessageType,
   type CashierProperties,
-  DeviceType, type openCashierParameters, PaymentAction, type PaymentEmitEventData, type ResolvedCashierProperties
+  DeviceType,
+  type openCashierParameters,
+  PaymentAction,
+  type PaymentEmitEventData,
+  type ResolvedCashierProperties
 } from "./types";
 import { CashierError, CashierErrorCode } from "../util/cashier-error";
 import { DEFAULT_MOBILE_STYLES, DEFAULT_MODAL_STYLES } from "../ui/data";
@@ -17,12 +22,14 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
   private iframe?: HTMLIFrameElement;
   private container?: HTMLElement;
   private isOpenedIn?: "Container" | "Modal";
+  private currentPaymentAction?: PaymentAction;
   private currentSessionId?: string;
   private cashierProperties: ResolvedCashierProperties;
   private readonly boundMessageHandler: (event: MessageEvent) => void;
 
   constructor(options: CashierProperties) {
     super();
+    this.currentPaymentAction = PaymentAction.DEPOSIT;
     this.cashierProperties = {
       environment: options.environment ?? "production",
       device: options.device ?? this.detectDevice(),
@@ -139,6 +146,7 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
     if (this.isOpen() && this.currentSessionId === sessionId) return;
     if (this.isOpen()) this.close();
 
+    if (paymentAction) this.currentPaymentAction = paymentAction;
     const url = this.buildUrl(sessionId, paymentAction);
 
     if (containerId) this.isOpenedIn = "Container";
@@ -186,6 +194,25 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
     this.currentSessionId = undefined;
     this.emit(CashierEmitEvent.IFRAME_CLOSED, undefined);
   }
+
+  reload() {
+    if (!this.currentSessionId) {
+      throw new CashierError(
+        CashierErrorCode.UNKNOWN,
+        "Cannot reload cashier: no active session"
+      );
+    }
+
+    const params: openCashierParameters = {
+      sessionId: this.currentSessionId,
+      containerId: this.container?.id,
+      paymentAction: this.currentPaymentAction,
+    };
+
+    this.close();
+    this.open(params);
+  }
+
 
   destroy() {
     window.removeEventListener("message", this.boundMessageHandler);

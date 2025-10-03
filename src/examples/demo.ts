@@ -20,7 +20,7 @@ import {
   type PaymentEmitEventData
 } from "../sdk/types";
 
-const sessionId = "bd4dffdf-23e4-4e1a-baf6-b48c09627c62";
+const sessionId = "your-session-id-here";
 
 // 1. Initialize SDK
 const cashier = new CashierSDK({
@@ -110,7 +110,12 @@ document.getElementById("btn-close")?.addEventListener("click", () => {
   cashier.close();
 });
 
-// 7. Destroy the cashier instance completely
+// 7. Close cashier
+document.getElementById("btn-reload")?.addEventListener("click", () => {
+  cashier.reload();
+});
+
+// 8. Destroy the cashier instance completely
 document.getElementById("btn-destroy")?.addEventListener("click", () => {
   cashier.destroy();
 });

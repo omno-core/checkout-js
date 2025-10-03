@@ -46,7 +46,7 @@ cashier.on(CashierEmitEvent.PAYMENT_FAILED, (data) => {
 
 // Open payment interface
 const sessionId = "cashier_session_id";
-cashier.open(sessionId);
+cashier.open({ sessionId });
 ```
 
 ## Configuration
@@ -201,6 +201,9 @@ cashier.open({ sessionId, paymentAction: PaymentAction.WITHDRAW });
 
 // Close cashier
 cashier.close();
+
+// Reload cashier
+cashier.reload();
 
 // Destroy the cashier instance completely
 cashier.destroy();
