@@ -26,6 +26,7 @@ export function mountModal(url: string, styles: ModalStyles = {}): HTMLDivElemen
   `;
 
   const iframe = document.createElement("iframe");
+  iframe.allow = "clipboard-read; clipboard-write";
   iframe.src = url;
   iframe.style.cssText = "width: 100%; height: 100%; border: none;";
 

@@ -15,6 +15,7 @@ export function mountMobile(url: string, styles: MobileStyles = {}): HTMLDivElem
   `;
 
   const iframe = document.createElement("iframe");
+  iframe.allow = "clipboard-read; clipboard-write";
   iframe.src = url;
   iframe.style.cssText = `
     position: absolute; top: 0; left: 0;
