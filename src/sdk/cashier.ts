@@ -26,6 +26,7 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
   private currentSessionId?: string;
   private cashierProperties: ResolvedCashierProperties;
   private readonly boundMessageHandler: (event: MessageEvent) => void;
+  private parentUrl: string = "";
 
   constructor(options: CashierProperties) {
     super();
@@ -47,6 +48,11 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
 
     this.boundMessageHandler = this.setupMessageListener.bind(this);
     window.addEventListener("message", this.boundMessageHandler);
+    window.addEventListener("load", () => {
+      this.parentUrl = window.location.href;
+      const sessionId = new URLSearchParams(window.location.search).get("omCashierSessionIdNo");
+      if (sessionId) this.open({ sessionId: sessionId })
+    });
   }
 
   private setupMessageListener(event: MessageEvent): void {
@@ -81,6 +87,13 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
           {
             type: CashierParentMessageType.SET_OPENED_IN,
             data: { openedIn: this.isOpenedIn }
+          },
+          "*"
+        );
+        this.iframe.contentWindow.postMessage(
+          {
+            type: CashierParentMessageType.SET_PARENT_URL,
+            data: { parentUrl: this.parentUrl }
           },
           "*"
         );
