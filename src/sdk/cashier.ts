@@ -56,6 +56,11 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
   }
 
   private setupMessageListener(event: MessageEvent): void {
+    if (!this.iframe?.contentWindow) return;
+
+    const { type, data } = event.data ?? {};
+    if (!Object.values(CashierMessageType).includes(type as CashierMessageType)) return;
+
     if (!this.isValidOrigin(event.origin)) {
       throw new CashierError(
         CashierErrorCode.INVALID_ORIGIN,
@@ -63,8 +68,6 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
         { origin: event.origin }
       );
     }
-
-    const { type, data } = event.data ?? {};
 
     switch (type) {
       case CashierMessageType.CLOSE_IFRAME:

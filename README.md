@@ -106,7 +106,7 @@ const config = {
     modal: {
       backgroundColor: "rgba(0,0,0,0.4)",
       width: "900px",
-      height: "600px",
+      height: "800px",
       borderRadius: "12px",
       zIndex: 9
     } as ModalStyles,
@@ -284,7 +284,7 @@ cashier.on(CashierEmitEvent.PAYMENT_SUCCESS, (data: PaymentEmitEventData) => {
         modal: {
           backgroundColor: "rgba(0,0,0,0.4)",
           width: "900px",
-          height: "600px",
+          height: "800px",
           borderRadius: "12px",
           zIndex: 9
         },
