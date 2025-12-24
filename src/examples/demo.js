@@ -102,7 +102,7 @@
   // src/env.ts
   var ENV_CONFIG = {
     sandbox: {
-      checkoutBase: "http://localhost:5173/payments-v2/cashier"
+      checkoutBase: "https://checkout.omno.dev/payments-v2/cashier"
     },
     production: {
       checkoutBase: "https://checkout.omno.com/payments-v2/cashier"
@@ -344,7 +344,7 @@
   };
 
   // src/examples/demo.ts
-  var sessionId = "82d89595-4b8b-4102-8657-10bb310d1e9e";
+  var sessionId = "your-session-id-here";
   var cashier = new CashierSDK({
     device: "AUTO" /* AUTO */,
     environment: "sandbox",
