@@ -91,6 +91,10 @@ cashier.on(CashierEmitEvent.OVERLAY_CLICKED, () => {
   console.log("Clicked outside of the cashier");
 });
 
+cashier.on(CashierEmitEvent.KYC_REQUIRED_FIELD_ERRORS, (data) => {
+  console.log("KYC Required Field Errors:", data);
+});
+
 // 3. Open Cashier (modal by default)
 document.getElementById("btn-open")?.addEventListener("click", () => {
   cashier.open({ sessionId });

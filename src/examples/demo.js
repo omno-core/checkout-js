@@ -146,6 +146,7 @@
     CashierMessageType2["CLOSE_IFRAME"] = "CLOSE_IFRAME";
     CashierMessageType2["CASHIER_LOADED"] = "CASHIER_LOADED";
     CashierMessageType2["LIVE_CHAT_CLICK"] = "LIVE_CHAT_CLICK";
+    CashierMessageType2["KYC_REQUIRED_FIELD_ERRORS"] = "KYC_REQUIRED_FIELD_ERRORS";
     CashierMessageType2["PAYMENT_SUCCESS"] = "PAYMENT_SUCCESS";
     CashierMessageType2["PAYMENT_FAILED"] = "PAYMENT_FAILED";
     CashierMessageType2["PAYMENT_PENDING"] = "PAYMENT_PENDING";
@@ -228,6 +229,9 @@
           break;
         case "LIVE_CHAT_CLICK" /* LIVE_CHAT_CLICK */:
           this.emit("liveChatClicked" /* LIVE_CHAT_CLICKED */, data);
+          break;
+        case "KYC_REQUIRED_FIELD_ERRORS" /* KYC_REQUIRED_FIELD_ERRORS */:
+          this.emit("kycRequiredFieldErrors" /* KYC_REQUIRED_FIELD_ERRORS */, data);
           break;
         case "PAYMENT_SUCCESS" /* PAYMENT_SUCCESS */:
           this.emit("paymentSuccess" /* PAYMENT_SUCCESS */, data);
@@ -400,6 +404,9 @@
   });
   cashier.on("overlayClicked" /* OVERLAY_CLICKED */, () => {
     console.log("Clicked outside of the cashier");
+  });
+  cashier.on("kycRequiredFieldErrors" /* KYC_REQUIRED_FIELD_ERRORS */, (data) => {
+    console.log("KYC Required Field Errors:", data);
   });
   document.getElementById("btn-open")?.addEventListener("click", () => {
     cashier.open({ sessionId });
