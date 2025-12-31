@@ -142,6 +142,10 @@ cashier.on(CashierEmitEvent.PAYMENT_PENDING, (data) => {
 cashier.on(CashierEmitEvent.PAYMENT_CANCELED, (data) => {
   console.warn("⚠️ Payment canceled", data);
 });
+
+cashier.on(CashierEmitEvent.KYC_REQUIRED_FIELD_ERRORS, (data) => {
+  console.log("KYC Required Field Errors:", data);
+});
 ```
 
 ### Iframe Lifecycle Events
@@ -352,17 +356,18 @@ cashier.on(CashierEmitEvent.PAYMENT_SUCCESS, (data: PaymentEmitEventData) => {
 
 ### Events
 
-| **Event**              | **Payload Type**        | **Description**                                                                  |
-|------------------------|-------------------------|----------------------------------------------------------------------------------|
-| `iframeOpened`         | `{ sessionId: string }` | Fired when the cashier iframe has been successfully opened with a given session. |
-| `iframeClosed`         | `void`                  | Fired when the iframe has been closed.                                           |
-| `iframeDestroyed`      | `void`                  | Fired when the iframe has been completely removed from the DOM.                  |
-| `iframeOpenRequested`  | `void`                  | Fired when an iframe open request is initiated.                                  |
-| `iframeCloseRequested` | `void`                  | Fired when an iframe close request is initiated.                                 |
-| `cashierLoaded`        | `void`                  | Fired once the cashier UI has finished loading.                                  |
-| `liveChatClicked`      | `void`                  | Fired when the “Live Chat” button is clicked inside the cashier.                 |
-| `overlayClicked`       | `void`                  | Fired when the overlay/outside cashier is clicked.                               |
-| `paymentSuccess`       | `PaymentEmitEventData`  | Fired when a payment succeeds.                                                   |
-| `paymentFailed`        | `PaymentEmitEventData`  | Fired when a payment fails.                                                      |
-| `paymentPending`       | `PaymentEmitEventData`  | Fired when a payment is pending.                                                 |
-| `paymentCanceled`      | `PaymentEmitEventData`  | Fired when a payment is canceled by the user.                                    |
+| **Event**                | **Payload Type**             | **Description**                                                                          |
+|--------------------------|------------------------------|------------------------------------------------------------------------------------------|
+| `iframeOpened`           | `{ sessionId: string }`      | Fired when the cashier iframe has been successfully opened with a given session.         |
+| `iframeClosed`           | `void`                       | Fired when the iframe has been closed.                                                   |
+| `iframeDestroyed`        | `void`                       | Fired when the iframe has been completely removed from the DOM.                          |
+| `iframeOpenRequested`    | `void`                       | Fired when an iframe open request is initiated.                                          |
+| `iframeCloseRequested`   | `void`                       | Fired when an iframe close request is initiated.                                         |
+| `cashierLoaded`          | `void`                       | Fired once the cashier UI has finished loading.                                          |
+| `liveChatClicked`        | `void`                       | Fired when the “Live Chat” button is clicked inside the cashier.                         |
+| `overlayClicked`         | `void`                       | Fired when the overlay/outside cashier is clicked.                                       |
+| `paymentSuccess`         | `PaymentEmitEventData`       | Fired when a payment succeeds.                                                           |
+| `paymentFailed`          | `PaymentEmitEventData`       | Fired when a payment fails.                                                              |
+| `paymentPending`         | `PaymentEmitEventData`       | Fired when a payment is pending.                                                         |
+| `paymentCanceled`        | `PaymentEmitEventData`       | Fired when a payment is canceled by the user.                                            |
+| `kycRequiredFieldErrors` | `KYCRequiredFieldErrorsData` | Fired when required KYC fields are missing or invalid and must be completed by the user. |

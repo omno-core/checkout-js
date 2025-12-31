@@ -1,10 +1,11 @@
-import { ENV_CONFIG } from "../env";
+import {ENV_CONFIG} from "../env";
 
 // message given to cashierSdk
 export enum CashierMessageType {
   CLOSE_IFRAME = "CLOSE_IFRAME",
   CASHIER_LOADED = "CASHIER_LOADED",
   LIVE_CHAT_CLICK = 'LIVE_CHAT_CLICK',
+  KYC_REQUIRED_FIELD_ERRORS = 'KYC_REQUIRED_FIELD_ERRORS',
 
   PAYMENT_SUCCESS = "PAYMENT_SUCCESS",
   PAYMENT_FAILED = "PAYMENT_FAILED",
@@ -30,6 +31,8 @@ export enum CashierEmitEvent {
   PAYMENT_PENDING = "paymentPending",
   PAYMENT_CANCELED = "paymentCanceled",
 
+  KYC_REQUIRED_FIELD_ERRORS = 'kycRequiredFieldErrors',
+
   UNKNOWN = "unknown",
 }
 
@@ -49,6 +52,8 @@ export type CashierEventMap = {
   [CashierEmitEvent.PAYMENT_PENDING]: PaymentEmitEventData;
   [CashierEmitEvent.PAYMENT_CANCELED]: PaymentEmitEventData;
 
+  [CashierEmitEvent.KYC_REQUIRED_FIELD_ERRORS]: KYCRequiredFieldErrorsData;
+
   [CashierEmitEvent.UNKNOWN]: { type: string; data: any };
 };
 
@@ -58,6 +63,12 @@ export type PaymentEmitEventData = {
   currency: string,
   orderId: string,
   amount?: number
+}
+
+export type KYCRequiredFieldErrorsData = {
+  fieldName: string,
+  issue: 'MISSING' | 'INVALID',
+  errorMessage: string
 }
 
 // cashierSdk to iframe message

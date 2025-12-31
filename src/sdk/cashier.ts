@@ -10,6 +10,7 @@ import {
   CashierParentMessageType,
   type CashierProperties,
   DeviceType,
+  KYCRequiredFieldErrorsData,
   type openCashierParameters,
   PaymentAction,
   type PaymentEmitEventData,
@@ -105,6 +106,10 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
 
       case CashierMessageType.LIVE_CHAT_CLICK:
         this.emit(CashierEmitEvent.LIVE_CHAT_CLICKED, data);
+        break;
+
+      case CashierMessageType.KYC_REQUIRED_FIELD_ERRORS:
+        this.emit(CashierEmitEvent.KYC_REQUIRED_FIELD_ERRORS, data as KYCRequiredFieldErrorsData);
         break;
 
       case CashierMessageType.PAYMENT_SUCCESS:
