@@ -58,6 +58,7 @@ interface CashierProperties {
   environment?: Environment;
   device?: DeviceType;
   styles?: CashierStyles;
+  returnUrlAfterRedirection?: string;
 }
 
 type Environment = "sandbox" | "production"
@@ -114,7 +115,8 @@ const config = {
       backgroundColor: "rgba(0,0,0,0.4)",
       zIndex: 10
     } as MobileStyles,
-  }
+  },
+  returnUrlAfterRedirection: "http://example"
 } as CashierProperties;
 
 const cashier = new CashierSDK(config);
@@ -292,7 +294,8 @@ cashier.on(CashierEmitEvent.PAYMENT_SUCCESS, (data: PaymentEmitEventData) => {
           backgroundColor: "rgba(0,0,0,0.4)",
           zIndex: 10
         }
-      }
+      },
+      returnUrlAfterRedirection: "http://example"
     });
 
     // 2. Register event listeners

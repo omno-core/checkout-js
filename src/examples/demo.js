@@ -158,7 +158,7 @@
   var CashierSDK = class extends EventEmitter {
     constructor(options) {
       super();
-      this.parentUrl = "";
+      this.parentUrl = void 0;
       this.currentPaymentAction = "DEPOSIT" /* DEPOSIT */;
       this.cashierProperties = {
         environment: options.environment ?? "production",
@@ -173,10 +173,10 @@
       } else {
         this.cashierProperties.device = this.detectDevice();
       }
+      this.parentUrl = options.returnUrlAfterRedirection;
       this.boundMessageHandler = this.setupMessageListener.bind(this);
       window.addEventListener("message", this.boundMessageHandler);
       window.addEventListener("load", () => {
-        this.parentUrl = window.location.href;
         const sessionId2 = new URLSearchParams(window.location.search).get("omCashierSessionIdNo");
         if (sessionId2) this.open({ sessionId: sessionId2 });
       });
@@ -215,13 +215,15 @@
             },
             "*"
           );
-          this.iframe.contentWindow.postMessage(
-            {
-              type: "SET_PARENT_URL" /* SET_PARENT_URL */,
-              data: { parentUrl: this.parentUrl }
-            },
-            "*"
-          );
+          if (this.parentUrl) {
+            this.iframe.contentWindow.postMessage(
+              {
+                type: "SET_PARENT_URL" /* SET_PARENT_URL */,
+                data: { parentUrl: this.parentUrl }
+              },
+              "*"
+            );
+          }
           this.emit("cashierLoaded" /* CASHIER_LOADED */, data);
           break;
         case "LIVE_CHAT_CLICK" /* LIVE_CHAT_CLICK */:
@@ -360,7 +362,8 @@
         backgroundColor: "rgba(0,0,0,0.4)",
         zIndex: 10
       }
-    }
+    },
+    returnUrlAfterRedirection: "http://example"
   });
   cashier.on("iframeOpenRequested" /* IFRAME_OPEN_REQUESTED */, () => {
     console.log("Cashier open requested");

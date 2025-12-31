@@ -72,6 +72,7 @@ export interface CashierProperties {
   environment?: Environment;
   device?: DeviceType;
   styles?: CashierStyles;
+  returnUrlAfterRedirection?: string;
 }
 
 export interface ResolvedCashierProperties {

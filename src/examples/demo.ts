@@ -38,7 +38,8 @@ const cashier = new CashierSDK({
       backgroundColor: "rgba(0,0,0,0.4)",
       zIndex: 10
     } as MobileStyles,
-  }
+  },
+  returnUrlAfterRedirection: "http://example"
 } as CashierProperties);
 
 // 2. Register listeners
