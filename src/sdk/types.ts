@@ -52,7 +52,7 @@ export type CashierEventMap = {
   [CashierEmitEvent.PAYMENT_PENDING]: PaymentEmitEventData;
   [CashierEmitEvent.PAYMENT_CANCELED]: PaymentEmitEventData;
 
-  [CashierEmitEvent.KYC_REQUIRED_FIELD_ERRORS]: KYCRequiredFieldErrorsData;
+  [CashierEmitEvent.KYC_REQUIRED_FIELD_ERRORS]: KYCRequiredFieldErrorsData[];
 
   [CashierEmitEvent.UNKNOWN]: { type: string; data: any };
 };

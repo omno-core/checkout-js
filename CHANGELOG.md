@@ -1,25 +1,48 @@
-## v1.0.14
+## v1.0.15
 
-✨ Added
+### ✨ Added
 
-Introduced the returnUrlAfterRedirection option to the CashierSDK constructor.
+#### New Event: `KYC_REQUIRED_FIELD_ERRORS`
 
-Allows users to be redirected back to the page where the SDK is embedded after being redirected to an external status or authorization page.
+A new emit event that triggers when required KYC fields are missing or invalid during a payment attempt.
 
-Automatically restores and resumes the same cashier session upon return.
+This event allows integrators to:
 
-🧠 Behavior
+- Display field-level validation errors
+- Guide users to complete required KYC steps
+- Redirect users to KYC verification flows
+- Implement fully custom KYC UX flows
 
-When the cashier is loaded, returnUrlAfterRedirection is associated with the current session.
+---
 
-During external cashier flows, the user is redirected to the external page and then back to the provided returnUrlAfterRedirection.
+### ⚙️ Cashier Builder Behavior Toggle
 
-On page load, the SDK detects the session ID from the URL and automatically reopens the cashier.
+A new option has been added to the **Cashier Builder** that allows switching between:
 
-The SDK is resumed using the omCashierSessionIdNo query parameter.
+1. **Omno Forms enabled** — Use built-in cashier KYC forms
+2. **Omno Forms disabled** — Custom Integration Mode: Disable built-in forms and emit `KYC_REQUIRED_FIELD_ERRORS`
+   instead
 
-🧩 Compatibility
+When **Custom Integration Mode** is enabled, the cashier will:
 
-This change is fully backward-compatible.
+- Skip its internal KYC UI
+- Emit `KYC_REQUIRED_FIELD_ERRORS`
+- Let integrators fully control how KYC errors are displayed and resolved
 
-If returnUrlAfterRedirection is not provided, the SDK behaves exactly as before.
+This enables:
+
+- Custom UI implementations
+- External KYC flows
+- Headless KYC handling
+- Embedded compliance experiences
+
+---
+
+### 🔧 Usage
+
+Register the listener:
+
+```ts
+cashier.on(CashierEmitEvent.KYC_REQUIRED_FIELD_ERRORS, (data: KYCRequiredFieldErrorsData[]) => {
+  console.log("KYC Required Field Errors:", data);
+});

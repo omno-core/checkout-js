@@ -111,7 +111,7 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
         break;
 
       case CashierMessageType.KYC_REQUIRED_FIELD_ERRORS:
-        this.emit(CashierEmitEvent.KYC_REQUIRED_FIELD_ERRORS, data as KYCRequiredFieldErrorsData);
+        this.emit(CashierEmitEvent.KYC_REQUIRED_FIELD_ERRORS, data as KYCRequiredFieldErrorsData[]);
         break;
 
       case CashierMessageType.PAYMENT_SUCCESS:
