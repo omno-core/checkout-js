@@ -1,19 +1,8 @@
-// import CashierSDK, {
-//   DeviceType,
-//   type ModalStyles,
-//   type MobileStyles,
-//   CashierEmitEvent,
-//   type CashierProperties,
-//   type PaymentEmitEventData,
-//   type Environment
-// } from "@omno-payment/checkout-js";
-
-import { CashierSDK } from "../sdk/cashier";
+import {CashierSDK} from "../sdk/cashier";
 import {
   CashierEmitEvent,
   type CashierProperties,
   DeviceType,
-  type Environment,
   type MobileStyles,
   type ModalStyles,
   PaymentAction,
@@ -25,7 +14,6 @@ const sessionId = "your-session-id-here";
 // 1. Initialize SDK
 const cashier = new CashierSDK({
   device: DeviceType.AUTO,
-  environment: 'sandbox' as Environment,
   styles: {
     modal: {
       backgroundColor: "rgba(0,0,0,0.4)",
@@ -39,7 +27,8 @@ const cashier = new CashierSDK({
       zIndex: 10
     } as MobileStyles,
   },
-  returnUrlAfterRedirection: "http://example"
+  returnUrlAfterRedirection: "http://example",
+  baseUrl: "https://checkout.omno.dev/"
 } as CashierProperties);
 
 // 2. Register listeners

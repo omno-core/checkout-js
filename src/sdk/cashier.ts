@@ -1,8 +1,7 @@
-import { mountModal } from "../ui/modal";
-import { mountMobile } from "../ui/mobile";
-import { mountInContainerWithId } from "../ui/container";
-import { ENV_CONFIG } from "../env";
-import { EventEmitter } from "../util/event-emitter";
+import {mountModal} from "../ui/modal";
+import {mountMobile} from "../ui/mobile";
+import {mountInContainerWithId} from "../ui/container";
+import {EventEmitter} from "../util/event-emitter";
 import {
   CashierEmitEvent,
   type CashierEventMap,
@@ -16,8 +15,8 @@ import {
   type PaymentEmitEventData,
   type ResolvedCashierProperties
 } from "./types";
-import { CashierError, CashierErrorCode } from "../util/cashier-error";
-import { DEFAULT_MOBILE_STYLES, DEFAULT_MODAL_STYLES } from "../ui/data";
+import {CashierError, CashierErrorCode} from "../util/cashier-error";
+import {DEFAULT_MOBILE_STYLES, DEFAULT_MODAL_STYLES} from "../ui/data";
 
 export class CashierSDK extends EventEmitter<CashierEventMap> {
   private iframe?: HTMLIFrameElement;
@@ -28,12 +27,12 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
   private cashierProperties: ResolvedCashierProperties;
   private readonly boundMessageHandler: (event: MessageEvent) => void;
   private readonly parentUrl: string | undefined = undefined;
+  private readonly baseUrl: string;
 
   constructor(options: CashierProperties) {
     super();
     this.currentPaymentAction = PaymentAction.DEPOSIT;
     this.cashierProperties = {
-      environment: options.environment ?? "production",
       device: options.device ?? this.detectDevice(),
       styles: {
         modal: { ...DEFAULT_MODAL_STYLES, ...options.styles?.modal },
@@ -47,6 +46,7 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
       this.cashierProperties.device = this.detectDevice();
     }
     this.parentUrl = options.returnUrlAfterRedirection;
+    this.baseUrl = `${options.baseUrl?.replace(/\/+$/, '')}/payments-v2/cashier`;
 
     this.boundMessageHandler = this.setupMessageListener.bind(this);
     window.addEventListener("message", this.boundMessageHandler);
@@ -142,8 +142,7 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
 
   private isValidOrigin(origin: string): boolean {
     try {
-      const { checkoutBase } = ENV_CONFIG[this.cashierProperties.environment];
-      return new URL(checkoutBase).origin === origin;
+      return new URL(this.baseUrl).origin === origin;
     } catch {
       return false;
     }
@@ -159,9 +158,8 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
   }
 
   private buildUrl(sessionId: string, paymentAction: PaymentAction | undefined): string {
-    const { checkoutBase } = ENV_CONFIG[this.cashierProperties.environment];
     const suffix = paymentAction ? paymentAction.toLowerCase() : undefined;
-    return suffix ? `${checkoutBase}/${sessionId}/${suffix}` : `${checkoutBase}/${sessionId}`;
+    return suffix ? `${this.baseUrl}/${sessionId}/${suffix}` : `${this.baseUrl}/${sessionId}`;
   }
 
   open({ sessionId, containerId, paymentAction }: openCashierParameters) {

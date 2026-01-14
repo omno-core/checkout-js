@@ -99,16 +99,6 @@
     return iframe;
   }
 
-  // src/env.ts
-  var ENV_CONFIG = {
-    sandbox: {
-      checkoutBase: "https://checkout.omno.dev/payments-v2/cashier"
-    },
-    production: {
-      checkoutBase: "https://checkout.omno.com/payments-v2/cashier"
-    }
-  };
-
   // src/util/event-emitter.ts
   var EventEmitter = class {
     constructor() {
@@ -162,7 +152,6 @@
       this.parentUrl = void 0;
       this.currentPaymentAction = "DEPOSIT" /* DEPOSIT */;
       this.cashierProperties = {
-        environment: options.environment ?? "production",
         device: options.device ?? this.detectDevice(),
         styles: {
           modal: { ...DEFAULT_MODAL_STYLES, ...options.styles?.modal },
@@ -175,6 +164,7 @@
         this.cashierProperties.device = this.detectDevice();
       }
       this.parentUrl = options.returnUrlAfterRedirection;
+      this.baseUrl = `${options.baseUrl?.replace(/\/+$/, "")}/payments-v2/cashier`;
       this.boundMessageHandler = this.setupMessageListener.bind(this);
       window.addEventListener("message", this.boundMessageHandler);
       window.addEventListener("load", () => {
@@ -255,8 +245,7 @@
     }
     isValidOrigin(origin) {
       try {
-        const { checkoutBase } = ENV_CONFIG[this.cashierProperties.environment];
-        return new URL(checkoutBase).origin === origin;
+        return new URL(this.baseUrl).origin === origin;
       } catch {
         return false;
       }
@@ -269,9 +258,8 @@
       return isMobile ? "MOBILE" /* MOBILE */ : "DESKTOP" /* DESKTOP */;
     }
     buildUrl(sessionId2, paymentAction) {
-      const { checkoutBase } = ENV_CONFIG[this.cashierProperties.environment];
       const suffix = paymentAction ? paymentAction.toLowerCase() : void 0;
-      return suffix ? `${checkoutBase}/${sessionId2}/${suffix}` : `${checkoutBase}/${sessionId2}`;
+      return suffix ? `${this.baseUrl}/${sessionId2}/${suffix}` : `${this.baseUrl}/${sessionId2}`;
     }
     open({ sessionId: sessionId2, containerId, paymentAction }) {
       this.emit("iframeOpenRequested" /* IFRAME_OPEN_REQUESTED */, void 0);
@@ -353,7 +341,6 @@
   var sessionId = "your-session-id-here";
   var cashier = new CashierSDK({
     device: "AUTO" /* AUTO */,
-    environment: "sandbox",
     styles: {
       modal: {
         backgroundColor: "rgba(0,0,0,0.4)",
@@ -367,7 +354,8 @@
         zIndex: 10
       }
     },
-    returnUrlAfterRedirection: "http://example"
+    returnUrlAfterRedirection: "http://example",
+    baseUrl: "https://checkout.omno.dev/"
   });
   cashier.on("iframeOpenRequested" /* IFRAME_OPEN_REQUESTED */, () => {
     console.log("Cashier open requested");

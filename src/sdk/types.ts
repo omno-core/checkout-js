@@ -1,5 +1,3 @@
-import {ENV_CONFIG} from "../env";
-
 // message given to cashierSdk
 export enum CashierMessageType {
   CLOSE_IFRAME = "CLOSE_IFRAME",
@@ -80,14 +78,13 @@ export enum CashierParentMessageType {
 
 // cashierSdk Properties
 export interface CashierProperties {
-  environment?: Environment;
   device?: DeviceType;
   styles?: CashierStyles;
   returnUrlAfterRedirection?: string;
+  baseUrl?: string;
 }
 
 export interface ResolvedCashierProperties {
-  environment: Environment;
   device: DeviceType;
   styles: CashierStyles;
 }
@@ -102,8 +99,6 @@ export enum PaymentAction {
   DEPOSIT = 'DEPOSIT',
   WITHDRAW = 'WITHDRAW',
 }
-
-export type Environment = keyof typeof ENV_CONFIG;
 
 // styles
 export interface ModalStyles {

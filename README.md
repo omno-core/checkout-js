@@ -55,13 +55,12 @@ cashier.open({ sessionId });
 
 ```typescript
 interface CashierProperties {
-  environment?: Environment;
   device?: DeviceType;
   styles?: CashierStyles;
   returnUrlAfterRedirection?: string;
+  baseUrl: string;
 }
 
-type Environment = "sandbox" | "production"
 
 enum DeviceType {
   DESKTOP = 'DESKTOP',
@@ -102,7 +101,6 @@ import {
 
 const config = {
   device: DeviceType.AUTO,
-  environment: 'sandbox' as Environment,
   styles: {
     modal: {
       backgroundColor: "rgba(0,0,0,0.4)",
@@ -116,7 +114,8 @@ const config = {
       zIndex: 10
     } as MobileStyles,
   },
-  returnUrlAfterRedirection: "http://example"
+  returnUrlAfterRedirection: "http://example",
+  baseUrl: "http://example"
 } as CashierProperties;
 
 const cashier = new CashierSDK(config);
@@ -253,14 +252,12 @@ The SDK is built with TypeScript and includes full type definitions:
 import CashierSDK, {
   DeviceType,
   CashierEmitEvent,
-  type Environment,
   type CashierProperties,
   type PaymentEmitEventData
 } from "@omno-payment/checkout-js";
 
 const config: CashierProperties = {
   device: DeviceType.AUTO,
-  environment: 'sandbox' as Environment,
 };
 
 const cashier = new CashierSDK(config);
@@ -299,7 +296,8 @@ cashier.on(CashierEmitEvent.PAYMENT_SUCCESS, (data: PaymentEmitEventData) => {
           zIndex: 10
         }
       },
-      returnUrlAfterRedirection: "http://example"
+      returnUrlAfterRedirection: "http://example",
+      baseUrl: "http://example"
     });
 
     // 2. Register event listeners
