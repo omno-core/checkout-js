@@ -21,6 +21,7 @@ import {DEFAULT_MOBILE_STYLES, DEFAULT_MODAL_STYLES} from "../ui/data";
 export class CashierSDK extends EventEmitter<CashierEventMap> {
   private iframe?: HTMLIFrameElement;
   private container?: HTMLElement;
+  private loader?: HTMLElement;
   private isOpenedIn?: "Container" | "Modal";
   private currentPaymentAction?: PaymentAction;
   private currentSessionId?: string;
@@ -103,6 +104,14 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
             "*"
           );
         }
+
+        setTimeout(() => {
+          if (this.iframe) {
+            this.loader?.remove()
+            this.iframe.style.opacity = "1"
+          }
+        }, 10);
+
         this.emit(CashierEmitEvent.CASHIER_LOADED, data);
         break;
 
@@ -142,7 +151,7 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
 
   private isValidOrigin(origin: string): boolean {
     try {
-      return new URL(this.baseUrl).origin === origin;
+      return __DEV__ ? true : new URL(this.baseUrl).origin === origin;
     } catch {
       return false;
     }
@@ -178,11 +187,15 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
         this.iframe = mountInContainerWithId(url, containerId);
         this.container = document.getElementById(containerId) ?? undefined;
       } else if (this.cashierProperties.device === DeviceType.MOBILE) {
-        this.container = mountMobile(url, this.cashierProperties.styles?.mobile);
-        this.iframe = this.container.querySelector("iframe") ?? undefined;
+        const { overlay, loader, iframe } = mountMobile(url, this.cashierProperties.styles?.mobile);
+        this.container = overlay;
+        this.iframe = iframe;
+        this.loader = loader;
       } else {
-        this.container = mountModal(url, this.cashierProperties.styles?.modal);
-        this.iframe = this.container.querySelector("iframe") ?? undefined;
+        const { overlay, loader, iframe } = mountModal(url, this.cashierProperties.styles?.modal);
+        this.container = overlay;
+        this.iframe = iframe;
+        this.loader = loader;
       }
 
       // click listener for modal

@@ -1,0 +1,94 @@
+<div class="cashier-mobile-loading-container">
+  <div class="cashier-mobile-loading-header">
+    <skeleton-line bg="rgba(255, 255, 255, 0.10)" w="120px" h="28px" r="9999px" o="0.64"></skeleton-line>
+    <svg data-cashier-close xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <path d="M15 5L5 15M5 5L15 15" stroke="rgba(255, 255, 255, 0.75)" stroke-opacity="0.75" stroke-width="1.5" stroke-linecap="round"
+            stroke-linejoin="round"/>
+    </svg>
+  </div>
+
+  <div class="cashier-mobile-loading-main">
+    <div class="cashier-mobile-loading-main-filters">
+      <skeleton-line w="36px" h="36px"></skeleton-line>
+      <skeleton-line h="36px"></skeleton-line>
+      <skeleton-line h="36px"></skeleton-line>
+      <skeleton-line h="36px"></skeleton-line>
+      <skeleton-line h="36px"></skeleton-line>
+    </div>
+    <div class="cashier-mobile-loading-main-data">
+      <skeleton-card></skeleton-card>
+      <skeleton-card></skeleton-card>
+      <skeleton-card></skeleton-card>
+
+      <skeleton-card></skeleton-card>
+      <skeleton-card></skeleton-card>
+      <skeleton-card></skeleton-card>
+
+      <skeleton-card></skeleton-card>
+      <skeleton-card></skeleton-card>
+      <skeleton-card></skeleton-card>
+
+      <skeleton-card></skeleton-card>
+      <skeleton-card></skeleton-card>
+      <skeleton-card></skeleton-card>
+
+      <skeleton-card></skeleton-card>
+      <skeleton-card></skeleton-card>
+      <skeleton-card></skeleton-card>
+    </div>
+  </div>
+</div>
+
+<style>
+  .cashier-mobile-loading-container {
+    background: #171717;
+    transform: translateY(100%);
+    animation: slideUp 0.25s ease-out forwards;
+  }
+
+  .cashier-mobile-loading-header {
+    display: flex;
+    justify-content: space-between;
+    height: 59px;
+    align-items: center;
+    padding: 0 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .cashier-mobile-loading-main {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 16px;
+  }
+
+  .cashier-mobile-loading-main-filters {
+    display: flex;
+    gap: 8px;
+  }
+
+  .cashier-mobile-loading-main-data {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  svg {
+    cursor: pointer;
+  }
+
+  svg:hover {
+    cursor: pointer;
+
+    path {
+      stroke: rgba(255, 255, 255, 0.9);
+    }
+  }
+
+  @keyframes slideUp {
+    to {
+      transform: translateY(0);
+    }
+  }
+</style>

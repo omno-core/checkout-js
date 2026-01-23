@@ -3,6 +3,8 @@ import commonjs from '@rollup/plugin-commonjs';
 import typescript from '@rollup/plugin-typescript';
 import terser from '@rollup/plugin-terser';
 import dts from 'rollup-plugin-dts';
+import stringImport from "rollup-plugin-string-import";
+import replace from "@rollup/plugin-replace";
 
 const production = !process.env.ROLLUP_WATCH;
 
@@ -29,11 +31,20 @@ export default [
             }
         ],
         plugins: [
+            replace({
+                preventAssignment: true,
+                values: {
+                    __DEV__: JSON.stringify(false)
+                }
+            }),
             nodeResolve({
                 browser: true,
                 preferBuiltins: false
             }),
             commonjs(),
+            stringImport({
+                include: "**/*.html"
+            }),
             typescript({
                 tsconfig: './tsconfig.json',
                 sourceMap: true
