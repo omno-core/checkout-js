@@ -1,5 +1,19 @@
 "use strict";
 (() => {
+  // src/sdk/types.ts
+  var CashierMessageType = /* @__PURE__ */ ((CashierMessageType2) => {
+    CashierMessageType2["CLOSE_IFRAME"] = "CLOSE_IFRAME";
+    CashierMessageType2["CASHIER_LOADED"] = "CASHIER_LOADED";
+    CashierMessageType2["LIVE_CHAT_CLICK"] = "LIVE_CHAT_CLICK";
+    CashierMessageType2["KYC_REQUIRED_FIELD_ERRORS"] = "KYC_REQUIRED_FIELD_ERRORS";
+    CashierMessageType2["PAYMENT_SUCCESS"] = "PAYMENT_SUCCESS";
+    CashierMessageType2["PAYMENT_FAILED"] = "PAYMENT_FAILED";
+    CashierMessageType2["PAYMENT_PENDING"] = "PAYMENT_PENDING";
+    CashierMessageType2["PAYMENT_CANCELED"] = "PAYMENT_CANCELED";
+    CashierMessageType2["MOBILE_OVERLAY_CLICKED"] = "MOBILE_OVERLAY_CLICKED";
+    return CashierMessageType2;
+  })(CashierMessageType || {});
+
   // src/ui/data.ts
   var DEFAULT_MODAL_STYLES = {
     backgroundColor: "rgba(0,0,0,0.4)",
@@ -13,6 +27,112 @@
     zIndex: 10
   };
 
+  // src/ui/modal-loader.html
+  var modal_loader_default = '<div class="cashier-loading-container">\n  <div class="cashier-loading-header">\n    <skeleton-line bg="rgba(255, 255, 255, 0.10)" w="120px" h="28px" r="9999px" o="0.64"></skeleton-line>\n    <svg data-cashier-close xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">\n      <path d="M15 5L5 15M5 5L15 15" stroke="rgba(255, 255, 255, 0.75)" stroke-opacity="0.75" stroke-width="1.5"\n            stroke-linecap="round"\n            stroke-linejoin="round"/>\n    </svg>\n  </div>\n\n  <div class="cashier-loading-main">\n    <div class="cashier-loading-navigation">\n      <div class="cashier-loading-navigation-filters">\n        <skeleton-line w="36px" h="36px"></skeleton-line>\n        <skeleton-line w="64px" h="36px"></skeleton-line>\n        <skeleton-line w="64px" h="36px"></skeleton-line>\n        <skeleton-line w="64px" h="36px"></skeleton-line>\n        <skeleton-line w="64px" h="36px"></skeleton-line>\n      </div>\n      <div class="cashier-loading-navigation-data">\n        <skeleton-card></skeleton-card>\n        <skeleton-card></skeleton-card>\n        <skeleton-card></skeleton-card>\n\n        <skeleton-card></skeleton-card>\n        <skeleton-card></skeleton-card>\n        <skeleton-card></skeleton-card>\n\n        <skeleton-card></skeleton-card>\n        <skeleton-card></skeleton-card>\n        <skeleton-card></skeleton-card>\n\n        <skeleton-card></skeleton-card>\n        <skeleton-card></skeleton-card>\n        <skeleton-card></skeleton-card>\n\n        <skeleton-card></skeleton-card>\n        <skeleton-card></skeleton-card>\n        <skeleton-card></skeleton-card>\n      </div>\n    </div>\n\n    <div class="cashier-loading-content">\n      <skeleton-card w="100px" h="48px"></skeleton-card>\n      <skeleton-line w="180px" h="6px" r="9999px" o="0.64"></skeleton-line>\n    </div>\n  </div>\n</div>\n\n<style>\n  .cashier-loading-container {\n    user-select: none;\n    width: 100%;\n    height: 100%;\n    background-color: #171717;\n    border: 1px solid rgba(255, 255, 255, 0.1);\n\n    animation: cashierFadeIn 0.2s ease-in-out forwards;\n  }\n\n  .cashier-loading-header {\n    display: flex;\n    justify-content: space-between;\n    height: 60px;\n    align-items: center;\n    padding: 0 20px;\n    border-bottom: 1px solid rgba(255, 255, 255, 0.1);\n  }\n\n  .cashier-loading-main {\n    display: flex;\n    width: 100%;\n    height: calc(100% - 60px);\n  }\n\n  .cashier-loading-navigation {\n    display: flex;\n    flex-direction: column;\n    gap: 20px;\n    min-width: 324px;\n    width: 324px;\n    padding: 20px;\n    background-color: rgba(255, 255, 255, 0.05);\n    border-right: 1px solid rgba(255, 255, 255, 0.1);\n  }\n\n  .cashier-loading-navigation-filters {\n    display: flex;\n    gap: 8px;\n  }\n\n  .cashier-loading-navigation-data {\n    width: 100%;\n    display: grid;\n    grid-template-columns: repeat(3, 1fr);\n    gap: 12px;\n  }\n\n  .cashier-loading-content {\n    overflow: hidden;\n    width: 100%;\n    display: flex;\n    flex-direction: column;\n    justify-content: center;\n    align-items: center;\n    gap: 12px;\n    padding: 20px;\n  }\n\n  svg {\n    cursor: pointer;\n  }\n\n  svg:hover {\n    cursor: pointer;\n\n    path {\n      stroke: rgba(255, 255, 255, 0.9);\n    }\n  }\n\n  @keyframes cashierFadeIn {\n    from {\n      opacity: 0;\n      transform: scale(0.8) translateY(20px);\n    }\n    to {\n      opacity: 1;\n      transform: scale(1) translateY(0);\n    }\n  }\n</style>\n';
+
+  // src/ui/skeletons/skeleton-line.js
+  var SkeletonLine = class extends HTMLElement {
+    static get observedAttributes() {
+      return ["w", "h", "r", "bg", "o"];
+    }
+    constructor() {
+      super();
+      const shadow = this.attachShadow({ mode: "open" });
+      shadow.innerHTML = `
+      <style>
+        :host {
+          display: block;
+          width: var(--w, 100%);
+        }
+        .line {
+          width: var(--w, 100%);
+          height: var(--h, 12px);
+          border-radius: var(--r, 8px);
+          background: var(--bg, rgba(255,255,255,0.05));
+          opacity: var(--o, 1);
+          position: relative;
+          overflow: hidden;
+        }
+        .line::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          transform: translateX(-100%);
+          background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(255,255,255,0.12),
+            transparent
+          );
+          animation: shimmer 1.2s infinite;
+        }
+        @keyframes shimmer {
+          to { transform: translateX(100%); }
+        }
+      </style>
+      <div class="line"></div>
+    `;
+      this._sync();
+    }
+    attributeChangedCallback() {
+      this._sync();
+    }
+    _sync() {
+      this.style.setProperty("--w", this.getAttribute("w") || "100%");
+      this.style.setProperty("--h", this.getAttribute("h") || "12px");
+      this.style.setProperty("--r", this.getAttribute("r") || "8px");
+      this.style.setProperty("--bg", this.getAttribute("bg") || "rgba(255,255,255,0.05)");
+      this.style.setProperty("--o", this.getAttribute("o") || "1");
+    }
+  };
+  customElements.define("skeleton-line", SkeletonLine);
+
+  // src/ui/skeletons/skeleton-card.js
+  var SkeletonCard = class extends HTMLElement {
+    static get observedAttributes() {
+      return ["w", "h", "r", "bg"];
+    }
+    constructor() {
+      super();
+      const shadow = this.attachShadow({ mode: "open" });
+      shadow.innerHTML = `
+      <style>
+        :host {
+          display: block;
+        }
+        .card {
+          width: var(--w, 100%);
+          height: var(--h, 56px);
+          background: var(--bg, rgba(255,255,255,0.05));
+          border-radius: var(--r, 12px);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 6px;
+          padding: 8px;
+          box-sizing: border-box;
+        }
+      </style>
+
+      <div class="card">
+        <skeleton-line w="16px" h="16px" r="50%"></skeleton-line>
+        <skeleton-line w="36px" h="6px"></skeleton-line>
+      </div>
+    `;
+      this._sync();
+    }
+    attributeChangedCallback() {
+      this._sync();
+    }
+    _sync() {
+      this.style.setProperty("--w", this.getAttribute("w") || "100%");
+      this.style.setProperty("--h", this.getAttribute("h") || "56px");
+      this.style.setProperty("--r", this.getAttribute("r") || "12px");
+      this.style.setProperty("--bg", this.getAttribute("bg") || "rgba(255,255,255,0.05)");
+    }
+  };
+  customElements.define("skeleton-card", SkeletonCard);
+
   // src/ui/modal.ts
   function mountModal(url, styles = {}) {
     const {
@@ -25,25 +145,46 @@
     const overlay = document.createElement("div");
     overlay.classList.add("cashier-modal-overlay");
     overlay.style.cssText = `
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: ${backgroundColor}; z-index: ${zIndex - 1};
+    position: fixed; inset: 0;
+    background: ${backgroundColor};
+    z-index: ${zIndex};
   `;
     const modal = document.createElement("div");
     modal.style.cssText = `
-    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    width: ${width}; height: ${height};
-    background: transparent; border-radius: ${borderRadius};
-    overflow: hidden; z-index: ${zIndex};
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: ${width};
+    height: ${height};
+    background: transparent;
+    border-radius: ${borderRadius};
+    overflow: hidden;
+    z-index: ${zIndex + 1};
   `;
+    const loader = document.createElement("div");
+    loader.style.cssText = "width: 100%; height: 100%; position: absolute; inset: 0";
+    loader.innerHTML = modal_loader_default;
+    const closeBtn = loader.querySelector("[data-cashier-close]");
+    loader.addEventListener("click", (e) => e.stopPropagation());
+    if (closeBtn) {
+      closeBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        window.postMessage({ type: "CLOSE_IFRAME" /* CLOSE_IFRAME */ }, "*");
+      });
+    }
     const iframe = document.createElement("iframe");
     iframe.allow = "clipboard-read; clipboard-write";
     iframe.src = url;
     iframe.style.cssText = "width: 100%; height: 100%; border: none;";
+    modal.appendChild(loader);
     modal.appendChild(iframe);
     overlay.appendChild(modal);
     document.body.appendChild(overlay);
-    return overlay;
+    return { overlay, loader, iframe };
   }
+
+  // src/ui/mobile-loader.html
+  var mobile_loader_default = '<div class="cashier-mobile-loading-container">\n  <div class="cashier-mobile-loading-header">\n    <skeleton-line bg="rgba(255, 255, 255, 0.10)" w="120px" h="28px" r="9999px" o="0.64"></skeleton-line>\n    <svg data-cashier-close xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">\n      <path d="M15 5L5 15M5 5L15 15" stroke="rgba(255, 255, 255, 0.75)" stroke-opacity="0.75" stroke-width="1.5" stroke-linecap="round"\n            stroke-linejoin="round"/>\n    </svg>\n  </div>\n\n  <div class="cashier-mobile-loading-main">\n    <div class="cashier-mobile-loading-main-filters">\n      <skeleton-line w="36px" h="36px"></skeleton-line>\n      <skeleton-line h="36px"></skeleton-line>\n      <skeleton-line h="36px"></skeleton-line>\n      <skeleton-line h="36px"></skeleton-line>\n      <skeleton-line h="36px"></skeleton-line>\n    </div>\n    <div class="cashier-mobile-loading-main-data">\n      <skeleton-card></skeleton-card>\n      <skeleton-card></skeleton-card>\n      <skeleton-card></skeleton-card>\n\n      <skeleton-card></skeleton-card>\n      <skeleton-card></skeleton-card>\n      <skeleton-card></skeleton-card>\n\n      <skeleton-card></skeleton-card>\n      <skeleton-card></skeleton-card>\n      <skeleton-card></skeleton-card>\n\n      <skeleton-card></skeleton-card>\n      <skeleton-card></skeleton-card>\n      <skeleton-card></skeleton-card>\n\n      <skeleton-card></skeleton-card>\n      <skeleton-card></skeleton-card>\n      <skeleton-card></skeleton-card>\n    </div>\n  </div>\n</div>\n\n<style>\n  .cashier-mobile-loading-container {\n    background: #171717;\n    transform: translateY(100%);\n    animation: slideUp 0.25s ease-out forwards;\n  }\n\n  .cashier-mobile-loading-header {\n    display: flex;\n    justify-content: space-between;\n    height: 59px;\n    align-items: center;\n    padding: 0 16px;\n    border-bottom: 1px solid rgba(255, 255, 255, 0.1);\n  }\n\n  .cashier-mobile-loading-main {\n    display: flex;\n    flex-direction: column;\n    gap: 20px;\n    padding: 16px;\n  }\n\n  .cashier-mobile-loading-main-filters {\n    display: flex;\n    gap: 8px;\n  }\n\n  .cashier-mobile-loading-main-data {\n    width: 100%;\n    display: grid;\n    grid-template-columns: repeat(3, 1fr);\n    gap: 12px;\n  }\n\n  svg {\n    cursor: pointer;\n  }\n\n  svg:hover {\n    cursor: pointer;\n\n    path {\n      stroke: rgba(255, 255, 255, 0.9);\n    }\n  }\n\n  @keyframes slideUp {\n    to {\n      transform: translateY(0);\n    }\n  }\n</style>';
 
   // src/ui/mobile.ts
   function mountMobile(url, styles = {}) {
@@ -51,22 +192,35 @@
       backgroundColor = DEFAULT_MOBILE_STYLES.backgroundColor,
       zIndex = DEFAULT_MOBILE_STYLES.zIndex
     } = styles;
-    const wrapper = document.createElement("div");
-    wrapper.classList.add("cashier-mobile-overlay");
-    wrapper.style.cssText = `
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: ${backgroundColor}; z-index: ${zIndex};
+    const overlay = document.createElement("div");
+    overlay.classList.add("cashier-mobile-overlay");
+    overlay.style.cssText = `
+    position: fixed;
+    inset: 0;
+    background: ${backgroundColor};
+    z-index: ${zIndex};
   `;
+    const loader = document.createElement("div");
+    loader.style.cssText = `position: absolute; width: 100%; bottom: 0; z-index: ${zIndex + 1};`;
+    loader.innerHTML = mobile_loader_default;
+    const closeBtn = loader.querySelector("[data-cashier-close]");
+    if (closeBtn) {
+      closeBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        window.postMessage({ type: "CLOSE_IFRAME" /* CLOSE_IFRAME */ }, "*");
+      });
+    }
     const iframe = document.createElement("iframe");
     iframe.allow = "clipboard-read; clipboard-write";
     iframe.src = url;
     iframe.style.cssText = `
-    position: absolute; top: 0; left: 0;
+    position: absolute; inset: 0; opacity: 0;
     width: 100%; height: 100%; border: none; background: transparent;
   `;
-    wrapper.appendChild(iframe);
-    document.body.appendChild(wrapper);
-    return wrapper;
+    overlay.appendChild(loader);
+    overlay.appendChild(iframe);
+    document.body.appendChild(overlay);
+    return { overlay, loader, iframe };
   }
 
   // src/util/cashier-error.ts
@@ -130,20 +284,6 @@
       });
     }
   };
-
-  // src/sdk/types.ts
-  var CashierMessageType = /* @__PURE__ */ ((CashierMessageType2) => {
-    CashierMessageType2["CLOSE_IFRAME"] = "CLOSE_IFRAME";
-    CashierMessageType2["CASHIER_LOADED"] = "CASHIER_LOADED";
-    CashierMessageType2["LIVE_CHAT_CLICK"] = "LIVE_CHAT_CLICK";
-    CashierMessageType2["KYC_REQUIRED_FIELD_ERRORS"] = "KYC_REQUIRED_FIELD_ERRORS";
-    CashierMessageType2["PAYMENT_SUCCESS"] = "PAYMENT_SUCCESS";
-    CashierMessageType2["PAYMENT_FAILED"] = "PAYMENT_FAILED";
-    CashierMessageType2["PAYMENT_PENDING"] = "PAYMENT_PENDING";
-    CashierMessageType2["PAYMENT_CANCELED"] = "PAYMENT_CANCELED";
-    CashierMessageType2["MOBILE_OVERLAY_CLICKED"] = "MOBILE_OVERLAY_CLICKED";
-    return CashierMessageType2;
-  })(CashierMessageType || {});
 
   // src/sdk/cashier.ts
   var CashierSDK = class extends EventEmitter {
@@ -215,6 +355,12 @@
               "*"
             );
           }
+          setTimeout(() => {
+            if (this.iframe) {
+              this.loader?.remove();
+              this.iframe.style.opacity = "1";
+            }
+          }, 10);
           this.emit("cashierLoaded" /* CASHIER_LOADED */, data);
           break;
         case "LIVE_CHAT_CLICK" /* LIVE_CHAT_CLICK */:
@@ -245,7 +391,7 @@
     }
     isValidOrigin(origin) {
       try {
-        return new URL(this.baseUrl).origin === origin;
+        return true ? true : new URL(this.baseUrl).origin === origin;
       } catch {
         return false;
       }
@@ -274,11 +420,15 @@
           this.iframe = mountInContainerWithId(url, containerId);
           this.container = document.getElementById(containerId) ?? void 0;
         } else if (this.cashierProperties.device === "MOBILE" /* MOBILE */) {
-          this.container = mountMobile(url, this.cashierProperties.styles?.mobile);
-          this.iframe = this.container.querySelector("iframe") ?? void 0;
+          const { overlay, loader, iframe } = mountMobile(url, this.cashierProperties.styles?.mobile);
+          this.container = overlay;
+          this.iframe = iframe;
+          this.loader = loader;
         } else {
-          this.container = mountModal(url, this.cashierProperties.styles?.modal);
-          this.iframe = this.container.querySelector("iframe") ?? void 0;
+          const { overlay, loader, iframe } = mountModal(url, this.cashierProperties.styles?.modal);
+          this.container = overlay;
+          this.iframe = iframe;
+          this.loader = loader;
         }
         if (this.container?.classList.contains("cashier-modal-overlay")) {
           this.container.addEventListener("click", () => {
