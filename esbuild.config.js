@@ -5,7 +5,8 @@ const ctx = await context({
   bundle: true,
   outfile: "src/examples/demo.js",
   loader: {
-    ".html": "text"
+    ".html": "text",
+    ".css": "text"
   },
   define: {
     __DEV__: "true"

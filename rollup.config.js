@@ -43,7 +43,7 @@ export default [
             }),
             commonjs(),
             stringImport({
-                include: "**/*.html"
+                include: ["**/*.html", "**/*.css"]
             }),
             typescript({
                 tsconfig: './tsconfig.json',

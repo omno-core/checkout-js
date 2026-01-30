@@ -1,6 +1,7 @@
 import {CashierMessageType, ModalStyles} from "../sdk/types";
 import {DEFAULT_MODAL_STYLES} from "./data";
 import loaderHTML from "./modal-loader.html";
+import loaderCSS from "./modal-loader.css";
 import "./skeletons/skeleton-line.js";
 import "./skeletons/skeleton-card.js";
 
@@ -36,9 +37,11 @@ export function mountModal(url: string, styles: ModalStyles = {}) {
 
   const loader = document.createElement("div");
   loader.style.cssText = "width: 100%; height: 100%; position: absolute; inset: 0";
-  loader.innerHTML = loaderHTML;
-  const closeBtn = loader.querySelector("[data-cashier-close]");
-  loader.addEventListener("click", e => e.stopPropagation());
+
+  const shadow = loader.attachShadow({ mode: "open" });
+  shadow.innerHTML = `<style>${loaderCSS}</style>${loaderHTML}`;
+
+  const closeBtn = shadow.querySelector("[data-cashier-close]");
   if (closeBtn) {
     closeBtn.addEventListener("click", (e) => {
       e.stopPropagation();
