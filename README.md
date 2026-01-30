@@ -147,6 +147,10 @@ cashier.on(CashierEmitEvent.PAYMENT_CANCELED, (data) => {
 cashier.on(CashierEmitEvent.KYC_REQUIRED_FIELD_ERRORS, (data) => {
   console.log("KYC Required Field Errors:", data);
 });
+
+cashier.on(CashierEmitEvent.KYC_REQUIRED_LEVEL_ERRORS, (data) => {
+  console.log("KYC Required Level Errors:", data);
+});
 ```
 
 ### Iframe Lifecycle Events
@@ -372,3 +376,4 @@ cashier.on(CashierEmitEvent.PAYMENT_SUCCESS, (data: PaymentEmitEventData) => {
 | `paymentPending`         | `PaymentEmitEventData`         | Fired when a payment is pending.                                                         |
 | `paymentCanceled`        | `PaymentEmitEventData`         | Fired when a payment is canceled by the user.                                            |
 | `kycRequiredFieldErrors` | `KYCRequiredFieldErrorsData[]` | Fired when required KYC fields are missing or invalid and must be completed by the user. |
+| `kycRequiredLevelErrors` | `string[]`                     | Fired when required KYC Level(s) are incompatible and must be completed by the user.     |

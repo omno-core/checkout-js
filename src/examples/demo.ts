@@ -9,7 +9,7 @@ import {
   type PaymentEmitEventData
 } from "../sdk/types";
 
-const sessionId = "your-session-id-here";
+const sessionId = "33561b21-c733-481a-afda-547d747910f7";
 
 // 1. Initialize SDK
 const cashier = new CashierSDK({
@@ -28,7 +28,7 @@ const cashier = new CashierSDK({
     } as MobileStyles,
   },
   returnUrlAfterRedirection: "http://example",
-  baseUrl: "https://checkout.omno.dev/"
+  baseUrl: "http://localhost:5173/"
 } as CashierProperties);
 
 // 2. Register listeners
@@ -82,6 +82,10 @@ cashier.on(CashierEmitEvent.OVERLAY_CLICKED, () => {
 
 cashier.on(CashierEmitEvent.KYC_REQUIRED_FIELD_ERRORS, (data) => {
   console.log("KYC Required Field Errors:", data);
+});
+
+cashier.on(CashierEmitEvent.KYC_REQUIRED_LEVEL_ERRORS, (data) => {
+  console.log("KYC Required Level Errors:", data);
 });
 
 // 3. Open Cashier (modal by default)

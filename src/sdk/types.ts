@@ -4,6 +4,7 @@ export enum CashierMessageType {
   CASHIER_LOADED = "CASHIER_LOADED",
   LIVE_CHAT_CLICK = 'LIVE_CHAT_CLICK',
   KYC_REQUIRED_FIELD_ERRORS = 'KYC_REQUIRED_FIELD_ERRORS',
+  KYC_REQUIRED_LEVEL_ERRORS = 'KYC_REQUIRED_LEVEL_ERRORS',
 
   PAYMENT_SUCCESS = "PAYMENT_SUCCESS",
   PAYMENT_FAILED = "PAYMENT_FAILED",
@@ -30,6 +31,7 @@ export enum CashierEmitEvent {
   PAYMENT_CANCELED = "paymentCanceled",
 
   KYC_REQUIRED_FIELD_ERRORS = 'kycRequiredFieldErrors',
+  KYC_REQUIRED_LEVEL_ERRORS = 'kycRequiredLevelErrors',
 
   UNKNOWN = "unknown",
 }
@@ -51,6 +53,7 @@ export type CashierEventMap = {
   [CashierEmitEvent.PAYMENT_CANCELED]: PaymentEmitEventData;
 
   [CashierEmitEvent.KYC_REQUIRED_FIELD_ERRORS]: KYCRequiredFieldErrorsData[];
+  [CashierEmitEvent.KYC_REQUIRED_LEVEL_ERRORS]: string[];
 
   [CashierEmitEvent.UNKNOWN]: { type: string; data: any };
 };

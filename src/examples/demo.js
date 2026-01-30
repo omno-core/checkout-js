@@ -6,6 +6,7 @@
     CashierMessageType2["CASHIER_LOADED"] = "CASHIER_LOADED";
     CashierMessageType2["LIVE_CHAT_CLICK"] = "LIVE_CHAT_CLICK";
     CashierMessageType2["KYC_REQUIRED_FIELD_ERRORS"] = "KYC_REQUIRED_FIELD_ERRORS";
+    CashierMessageType2["KYC_REQUIRED_LEVEL_ERRORS"] = "KYC_REQUIRED_LEVEL_ERRORS";
     CashierMessageType2["PAYMENT_SUCCESS"] = "PAYMENT_SUCCESS";
     CashierMessageType2["PAYMENT_FAILED"] = "PAYMENT_FAILED";
     CashierMessageType2["PAYMENT_PENDING"] = "PAYMENT_PENDING";
@@ -376,6 +377,9 @@
         case "KYC_REQUIRED_FIELD_ERRORS" /* KYC_REQUIRED_FIELD_ERRORS */:
           this.emit("kycRequiredFieldErrors" /* KYC_REQUIRED_FIELD_ERRORS */, data);
           break;
+        case "KYC_REQUIRED_LEVEL_ERRORS" /* KYC_REQUIRED_LEVEL_ERRORS */:
+          this.emit("kycRequiredLevelErrors" /* KYC_REQUIRED_LEVEL_ERRORS */, data);
+          break;
         case "PAYMENT_SUCCESS" /* PAYMENT_SUCCESS */:
           this.emit("paymentSuccess" /* PAYMENT_SUCCESS */, data);
           break;
@@ -495,7 +499,7 @@
   };
 
   // src/examples/demo.ts
-  var sessionId = "your-session-id-here";
+  var sessionId = "33561b21-c733-481a-afda-547d747910f7";
   var cashier = new CashierSDK({
     device: "AUTO" /* AUTO */,
     styles: {
@@ -512,7 +516,7 @@
       }
     },
     returnUrlAfterRedirection: "http://example",
-    baseUrl: "https://checkout.omno.dev/"
+    baseUrl: "http://localhost:5173/"
   });
   cashier.on("iframeOpenRequested" /* IFRAME_OPEN_REQUESTED */, () => {
     console.log("Cashier open requested");
@@ -552,6 +556,9 @@
   });
   cashier.on("kycRequiredFieldErrors" /* KYC_REQUIRED_FIELD_ERRORS */, (data) => {
     console.log("KYC Required Field Errors:", data);
+  });
+  cashier.on("kycRequiredLevelErrors" /* KYC_REQUIRED_LEVEL_ERRORS */, (data) => {
+    console.log("KYC Required Level Errors:", data);
   });
   document.getElementById("btn-open")?.addEventListener("click", () => {
     cashier.open({ sessionId });
