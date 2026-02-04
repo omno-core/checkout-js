@@ -53,7 +53,7 @@ export type CashierEventMap = {
   [CashierEmitEvent.PAYMENT_CANCELED]: PaymentEmitEventData;
 
   [CashierEmitEvent.KYC_REQUIRED_FIELD_ERRORS]: KYCRequiredFieldErrorsData[];
-  [CashierEmitEvent.KYC_REQUIRED_LEVEL_ERRORS]: string[];
+  [CashierEmitEvent.KYC_REQUIRED_LEVEL_ERRORS]: KYCRequiredLevelErrorsData[];
 
   [CashierEmitEvent.UNKNOWN]: { type: string; data: any };
 };
@@ -70,6 +70,11 @@ export type KYCRequiredFieldErrorsData = {
   fieldName: string,
   issue: 'MISSING' | 'INVALID',
   errorMessage: string
+}
+
+export type KYCRequiredLevelErrorsData = {
+  level: string,
+  description: string,
 }
 
 // cashierSdk to iframe message
