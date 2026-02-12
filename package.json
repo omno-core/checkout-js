@@ -1,6 +1,6 @@
 {
   "name": "@omno-payment/checkout-js",
-  "version": "1.0.18",
+  "version": "1.0.19",
   "description": "A framework-agnostic JavaScript SDK for payment processing with iframe integration",
   "type": "module",
   "main": "dist/index.js",
