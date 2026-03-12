@@ -319,8 +319,8 @@
       window.addEventListener("message", this.boundMessageHandler);
       this.injectTrackingBridge();
       window.addEventListener("load", () => {
-        const sessionId2 = new URLSearchParams(window.location.search).get("omCashierSessionIdNo");
-        if (sessionId2) this.open({ sessionId: sessionId2 });
+        const sessionId = new URLSearchParams(window.location.search).get("omCashierSessionIdNo");
+        if (sessionId) this.open({ sessionId });
       });
     }
     injectTrackingBridge() {
@@ -455,16 +455,16 @@
       ) || window.innerWidth <= 768;
       return isMobile ? "MOBILE" /* MOBILE */ : "DESKTOP" /* DESKTOP */;
     }
-    buildUrl(sessionId2, paymentAction) {
+    buildUrl(sessionId, paymentAction) {
       const suffix = paymentAction ? paymentAction.toLowerCase() : void 0;
-      return suffix ? `${this.baseUrl}/${sessionId2}/${suffix}` : `${this.baseUrl}/${sessionId2}`;
+      return suffix ? `${this.baseUrl}/${sessionId}/${suffix}` : `${this.baseUrl}/${sessionId}`;
     }
-    open({ sessionId: sessionId2, containerId, paymentAction }) {
+    open({ sessionId, containerId, paymentAction }) {
       this.emit("iframeOpenRequested" /* IFRAME_OPEN_REQUESTED */, void 0);
-      if (this.isOpen() && this.currentSessionId === sessionId2) return;
+      if (this.isOpen() && this.currentSessionId === sessionId) return;
       if (this.isOpen()) this.close();
       if (paymentAction) this.currentPaymentAction = paymentAction;
-      const url = this.buildUrl(sessionId2, paymentAction);
+      const url = this.buildUrl(sessionId, paymentAction);
       if (containerId) this.isOpenedIn = "Container";
       else this.isOpenedIn = "Modal";
       try {
@@ -487,8 +487,8 @@
             this.emit("overlayClicked" /* OVERLAY_CLICKED */, void 0);
           });
         }
-        this.currentSessionId = sessionId2;
-        this.emit("iframeOpened" /* IFRAME_OPENED */, { sessionId: sessionId2 });
+        this.currentSessionId = sessionId;
+        this.emit("iframeOpened" /* IFRAME_OPENED */, { sessionId });
       } catch (err) {
         throw err instanceof CashierError ? err : new CashierError("UNKNOWN" /* UNKNOWN */, "Failed to open cashier", err);
       }
@@ -541,8 +541,9 @@
     }
   };
 
-  // src/examples/demo.ts
-  var sessionId = "33561b21-c733-481a-afda-547d747910f7";
+  // src/examples/tracking-bridge-demo.ts
+  var SESSION_ID = "33561b21-c733-481a-afda-547d747910f7";
+  var lastTxId = null;
   var cashier = new CashierSDK({
     device: "AUTO" /* AUTO */,
     styles: {
@@ -561,67 +562,72 @@
     returnUrlAfterRedirection: "http://example",
     baseUrl: "http://localhost:5173/"
   });
-  cashier.on("iframeOpenRequested" /* IFRAME_OPEN_REQUESTED */, () => {
-    console.log("Cashier open requested");
-  });
-  cashier.on("iframeOpened" /* IFRAME_OPENED */, ({ sessionId: sessionId2 }) => {
-    console.log("Cashier opened with session:", sessionId2);
-  });
-  cashier.on("cashierLoaded" /* CASHIER_LOADED */, () => {
-    console.log("Cashier finished loading");
-  });
   cashier.on("paymentSuccess" /* PAYMENT_SUCCESS */, (data) => {
-    console.log("\u2705 Payment success", data);
+    console.log("\u2705 PAYMENT_SUCCESS", data);
   });
   cashier.on("paymentFailed" /* PAYMENT_FAILED */, (data) => {
-    console.error("\u274C Payment failed", data);
+    console.error("\u274C PAYMENT_FAILED", data);
   });
   cashier.on("paymentPending" /* PAYMENT_PENDING */, (data) => {
-    console.log("\u23F3 Payment pending", data);
+    console.log("\u23F3 PAYMENT_PENDING", data);
   });
   cashier.on("paymentCanceled" /* PAYMENT_CANCELED */, (data) => {
-    console.warn("\u26A0\uFE0F Payment canceled", data);
-  });
-  cashier.on("iframeCloseRequested" /* IFRAME_CLOSE_REQUESTED */, () => {
-    console.log("Cashier iframe close requested");
-  });
-  cashier.on("iframeClosed" /* IFRAME_CLOSED */, () => {
-    console.log("Cashier iframe closed");
-  });
-  cashier.on("iframeDestroyed" /* IFRAME_DESTROYED */, () => {
-    console.log("Cashier destroyed");
-  });
-  cashier.on("liveChatClicked" /* LIVE_CHAT_CLICKED */, () => {
-    console.log("Live chat clicked");
-  });
-  cashier.on("overlayClicked" /* OVERLAY_CLICKED */, () => {
-    console.log("Clicked outside of the cashier");
-  });
-  cashier.on("kycRequiredFieldErrors" /* KYC_REQUIRED_FIELD_ERRORS */, (data) => {
-    console.log("KYC Required Field Errors:", data);
-  });
-  cashier.on("kycRequiredLevelErrors" /* KYC_REQUIRED_LEVEL_ERRORS */, (data) => {
-    console.log("KYC Required Level Errors:", data);
+    console.warn("\u26A0\uFE0F PAYMENT_CANCELED", data);
   });
   cashier.on("ANALYTICS_EVENT" /* ANALYTICS_EVENT */, (data) => {
-    console.log("Analytics Event:", data);
+    console.log("\u{1F3AF} ANALYTICS_EVENT (deduplicated)", data);
   });
   document.getElementById("btn-open")?.addEventListener("click", () => {
-    cashier.open({ sessionId });
-  });
-  document.getElementById("btn-container")?.addEventListener("click", () => {
-    cashier.open({ sessionId, containerId: "your-container-id" });
-  });
-  document.getElementById("btn-container")?.addEventListener("click", () => {
-    cashier.open({ sessionId, paymentAction: "WITHDRAW" /* WITHDRAW */ });
+    cashier.open({ sessionId: SESSION_ID });
   });
   document.getElementById("btn-close")?.addEventListener("click", () => {
     cashier.close();
   });
-  document.getElementById("btn-reload")?.addEventListener("click", () => {
-    cashier.reload();
-  });
   document.getElementById("btn-destroy")?.addEventListener("click", () => {
     cashier.destroy();
+  });
+  function sendToBridge(type) {
+    const bridge = document.getElementById("omno-tracking-bridge");
+    if (!bridge?.contentWindow) {
+      console.warn("Bridge iframe not found \u2014 open cashier first");
+      return;
+    }
+    lastTxId = `txId_${Math.random().toString(36).substr(2, 8)}`;
+    const payload = {
+      type,
+      data: {
+        transactionId: lastTxId,
+        status: type,
+        currency: "USD"
+      }
+    };
+    bridge.contentWindow.postMessage(payload, "*");
+    console.log(`\u2192 Sent to bridge: ${type} | txId: ${lastTxId}`);
+  }
+  document.getElementById("btn-success")?.addEventListener("click", () => {
+    sendToBridge("PAYMENT_SUCCESS");
+  });
+  document.getElementById("btn-failed")?.addEventListener("click", () => {
+    sendToBridge("PAYMENT_FAILED");
+  });
+  document.getElementById("btn-duplicate")?.addEventListener("click", () => {
+    const bridge = document.getElementById("omno-tracking-bridge");
+    if (!bridge?.contentWindow) {
+      console.warn("Bridge iframe not found");
+      return;
+    }
+    if (!lastTxId) {
+      console.warn("Send a normal event first to get a txId to duplicate");
+      return;
+    }
+    bridge.contentWindow.postMessage({
+      type: "PAYMENT_SUCCESS",
+      data: {
+        transactionId: lastTxId,
+        status: "PAYMENT_SUCCESS",
+        currency: "USD"
+      }
+    }, "*");
+    console.warn(`\u2192 Sent DUPLICATE | txId: ${lastTxId} \u2014 ANALYTICS_EVENT should NOT fire`);
   });
 })();

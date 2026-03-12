@@ -32,7 +32,7 @@ export enum CashierEmitEvent {
 
   KYC_REQUIRED_FIELD_ERRORS = 'kycRequiredFieldErrors',
   KYC_REQUIRED_LEVEL_ERRORS = 'kycRequiredLevelErrors',
-
+  ANALYTICS_EVENT = "ANALYTICS_EVENT",
   UNKNOWN = "unknown",
 }
 
@@ -54,6 +54,7 @@ export type CashierEventMap = {
 
   [CashierEmitEvent.KYC_REQUIRED_FIELD_ERRORS]: KYCRequiredFieldErrorsData[];
   [CashierEmitEvent.KYC_REQUIRED_LEVEL_ERRORS]: KYCRequiredLevelErrorsData[];
+  [CashierEmitEvent.ANALYTICS_EVENT]: PaymentEmitEventData;
 
   [CashierEmitEvent.UNKNOWN]: { type: string; data: any };
 };

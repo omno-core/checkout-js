@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Tracking Bridge Test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <style>
+        body { font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; padding: 24px; background: #f7f7f7; }
+        button { margin: 6px; padding: 10px 16px; font-size: 14px; cursor: pointer; }
+        #btn-success {
+            background: green;
+        }
+        #btn-failed{
+            background: red;
+        }
+
+        #btn-duplicate{
+            background: orangered;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Tracking Bridge – Test Page</h1>
+
+<div>
+    <strong>Step 1 — Cashier</strong><br/><br/>
+    <button id="btn-open">Open Cashier (Modal)</button>
+    <button id="btn-close">Close Cashier</button>
+    <button id="btn-destroy">Destroy SDK</button>
+</div>
+
+<br/>
+
+<div>
+    <strong>Step 2 — Simulate payment-ui sending events to bridge</strong><br/><br/>
+    <button id="btn-success"> PAYMENT_SUCCESS</button>
+    <button id="btn-failed"> PAYMENT_FAILED</button>
+</div>
+
+<br/>
+
+<div>
+    <strong>Step 3 — Deduplication test</strong><br/><br/>
+    <button id="btn-duplicate"> Send same txId again (should be blocked)</button>
+</div>
+
+<script type="module" src="./tracking-bridge-demo.js"></script>
+
+</body>
+</html>

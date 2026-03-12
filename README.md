@@ -153,6 +153,26 @@ cashier.on(CashierEmitEvent.KYC_REQUIRED_LEVEL_ERRORS, (data) => {
 });
 ```
 
+### Analytics & Tracking Events
+
+The SDK includes a built-in tracking bridge that enables reliable payment analytics
+without requiring any additional configuration. The bridge automatically deduplicates
+events, ensuring each transaction is reported exactly once — even across page navigations
+or multiple open tabs.
+```typescript
+cashier.on(CashierEmitEvent.ANALYTICS_EVENT, (data: PaymentEmitEventData) => {
+  gtag('event', 'purchase', {
+    transaction_id: data.transactionId,
+    currency: data.currency,
+  });
+});
+```
+
+> **Note:** `ANALYTICS_EVENT` is distinct from `PAYMENT_SUCCESS` — it is guaranteed
+> to fire only once per `transactionId` regardless of retries, page navigation, or
+> duplicate postMessage events. Use `PAYMENT_SUCCESS` for immediate UI reactions
+> and `ANALYTICS_EVENT` for analytics/conversion tracking.
+
 ### Iframe Lifecycle Events
 
 ```typescript
@@ -221,7 +241,7 @@ cashier.destroy();
 ### Utility Methods
 
 ```typescript
-// Generate unique order ID
+// Check if cashier is currently open
 cashier.isOpen();
 
 // Get current device type
@@ -377,3 +397,4 @@ cashier.on(CashierEmitEvent.PAYMENT_SUCCESS, (data: PaymentEmitEventData) => {
 | `paymentCanceled`        | `PaymentEmitEventData`         | Fired when a payment is canceled by the user.                                            |
 | `kycRequiredFieldErrors` | `KYCRequiredFieldErrorsData[]` | Fired when required KYC fields are missing or invalid and must be completed by the user. |
 | `kycRequiredLevelErrors` | `KYCRequiredLevelErrorsData[]` | Fired when required KYC Level(s) are incompatible and must be completed by the user.     |
+| `ANALYTICS_EVENT`        | `PaymentEmitEventData`         | Fired once per unique transaction after deduplication. Use this for analytics and conversion tracking instead of `paymentSuccess`. |

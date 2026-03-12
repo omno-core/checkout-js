@@ -87,6 +87,9 @@ cashier.on(CashierEmitEvent.KYC_REQUIRED_FIELD_ERRORS, (data) => {
 cashier.on(CashierEmitEvent.KYC_REQUIRED_LEVEL_ERRORS, (data) => {
   console.log("KYC Required Level Errors:", data);
 });
+cashier.on(CashierEmitEvent.ANALYTICS_EVENT, (data) => {
+  console.log("Analytics Event:", data);
+});
 
 // 3. Open Cashier (modal by default)
 document.getElementById("btn-open")?.addEventListener("click", () => {
@@ -117,3 +120,4 @@ document.getElementById("btn-reload")?.addEventListener("click", () => {
 document.getElementById("btn-destroy")?.addEventListener("click", () => {
   cashier.destroy();
 });
+
