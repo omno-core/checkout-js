@@ -542,7 +542,7 @@
   };
 
   // src/examples/demo.ts
-  var sessionId = "33561b21-c733-481a-afda-547d747910f7";
+  var sessionId = "1fa7bb98-b10f-4114-98c6-386dfc211c71";
   var cashier = new CashierSDK({
     device: "AUTO" /* AUTO */,
     styles: {

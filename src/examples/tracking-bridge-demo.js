@@ -542,7 +542,7 @@
   };
 
   // src/examples/tracking-bridge-demo.ts
-  var SESSION_ID = "33561b21-c733-481a-afda-547d747910f7";
+  var SESSION_ID = "a9831464-cde5-4fbe-8c5c-44c8c650b6c3";
   var lastTxId = null;
   var cashier = new CashierSDK({
     device: "AUTO" /* AUTO */,
@@ -598,17 +598,19 @@
       data: {
         transactionId: lastTxId,
         status: type,
-        currency: "USD"
+        currency: "USD",
+        orderId: `order_${Date.now()}`,
+        amount: parseFloat((Math.random() * 500).toFixed(2)),
+        merchantTransactionId: `mTx_${Date.now()}`
       }
     };
     bridge.contentWindow.postMessage(payload, "*");
-    console.log(`\u2192 Sent to bridge: ${type} | txId: ${lastTxId}`);
   }
   document.getElementById("btn-success")?.addEventListener("click", () => {
     sendToBridge("PAYMENT_SUCCESS");
   });
   document.getElementById("btn-failed")?.addEventListener("click", () => {
-    sendToBridge("PAYMENT_FAILED");
+    sendToBridge("PAYMENT_DECLINED");
   });
   document.getElementById("btn-duplicate")?.addEventListener("click", () => {
     const bridge = document.getElementById("omno-tracking-bridge");
@@ -625,7 +627,10 @@
       data: {
         transactionId: lastTxId,
         status: "PAYMENT_SUCCESS",
-        currency: "USD"
+        currency: "USD",
+        orderId: `order_${Date.now()}`,
+        amount: 99.99,
+        merchantTransactionId: `mTx_dup_${Date.now()}`
       }
     }, "*");
     console.warn(`\u2192 Sent DUPLICATE | txId: ${lastTxId} \u2014 ANALYTICS_EVENT should NOT fire`);

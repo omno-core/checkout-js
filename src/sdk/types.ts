@@ -63,7 +63,7 @@ export type PaymentEmitEventData = {
   transactionId: string,
   status: string,
   currency: string,
-  orderId: string,
+  orderId?: string,
   amount?: number,
   merchantTransactionId?: string
 }

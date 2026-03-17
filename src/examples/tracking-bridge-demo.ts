@@ -8,7 +8,7 @@ import {
     type PaymentEmitEventData,
 } from "../sdk/types";
 
-const SESSION_ID = "33561b21-c733-481a-afda-547d747910f7";
+const SESSION_ID = "a9831464-cde5-4fbe-8c5c-44c8c650b6c3";
 let lastTxId: string | null = null;
 
 const cashier = new CashierSDK({
@@ -46,16 +46,8 @@ cashier.on(CashierEmitEvent.PAYMENT_CANCELED, (data) => {
     console.warn("⚠️ PAYMENT_CANCELED", data);
 });
 
-// Fires once per unique transactionId for SUCCESS and FAILED only.
-// Deduplication and filtering handled by the tracking bridge.
 cashier.on(CashierEmitEvent.ANALYTICS_EVENT, (data: PaymentEmitEventData) => {
     console.log("🎯 ANALYTICS_EVENT (deduplicated)", data);
-
-    // In real merchant code:
-    // gtag('event', data.status === 'SUCCESS' ? 'purchase' : 'payment_failed', {
-    //   transaction_id: data.transactionId,
-    //   currency: data.currency,
-    // });
 });
 
 document.getElementById("btn-open")?.addEventListener("click", () => {
@@ -87,11 +79,13 @@ function sendToBridge(type: string): void {
             transactionId: lastTxId,
             status: type,
             currency: "USD",
-        } satisfies Pick<PaymentEmitEventData, "transactionId" | "status" | "currency">,
+            orderId: `order_${Date.now()}`,
+            amount: parseFloat((Math.random() * 500).toFixed(2)),
+            merchantTransactionId: `mTx_${Date.now()}`,
+        } satisfies PaymentEmitEventData,
     };
-
     bridge.contentWindow.postMessage(payload, "*");
-    console.log(`→ Sent to bridge: ${type} | txId: ${lastTxId}`);
+
 }
 
 document.getElementById("btn-success")?.addEventListener("click", () => {
@@ -99,7 +93,7 @@ document.getElementById("btn-success")?.addEventListener("click", () => {
 });
 
 document.getElementById("btn-failed")?.addEventListener("click", () => {
-    sendToBridge("PAYMENT_FAILED");
+    sendToBridge("PAYMENT_DECLINED");
 });
 
 document.getElementById("btn-duplicate")?.addEventListener("click", () => {
@@ -121,7 +115,10 @@ document.getElementById("btn-duplicate")?.addEventListener("click", () => {
             transactionId: lastTxId,
             status: "PAYMENT_SUCCESS",
             currency: "USD",
-        } satisfies Pick<PaymentEmitEventData, "transactionId" | "status" | "currency">,
+            orderId: `order_${Date.now()}`,
+            amount: 99.99,
+            merchantTransactionId: `mTx_dup_${Date.now()}`,
+        } satisfies PaymentEmitEventData,
     }, "*");
 
     console.warn(`→ Sent DUPLICATE | txId: ${lastTxId} — ANALYTICS_EVENT should NOT fire`);
