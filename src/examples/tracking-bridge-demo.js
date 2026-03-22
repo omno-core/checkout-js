@@ -330,12 +330,18 @@
       }
       const iframe = document.createElement("iframe");
       iframe.id = TRACKING_BRIDGE_ID;
-      iframe.src = this.bridgeUrl;
       iframe.style.cssText = "display:none;width:0;height:0;border:none;position:absolute;pointer-events:none;";
       iframe.setAttribute("aria-hidden", "true");
       iframe.setAttribute("tabindex", "-1");
       document.body.appendChild(iframe);
       this.trackingBridge = iframe;
+    }
+    updateTrackingBridgeSession() {
+      if (!this.trackingBridge || !this.currentSessionId) return;
+      const bridgeUrlWithSession = `${this.bridgeUrl}?sessionId=${encodeURIComponent(this.currentSessionId)}`;
+      if (this.trackingBridge.src !== bridgeUrlWithSession) {
+        this.trackingBridge.src = bridgeUrlWithSession;
+      }
     }
     forwardToTrackingBridge(type, data) {
       if (!this.trackingBridge?.contentWindow) return;
@@ -488,6 +494,7 @@
           });
         }
         this.currentSessionId = sessionId;
+        this.updateTrackingBridgeSession();
         this.emit("iframeOpened" /* IFRAME_OPENED */, { sessionId });
       } catch (err) {
         throw err instanceof CashierError ? err : new CashierError("UNKNOWN" /* UNKNOWN */, "Failed to open cashier", err);
@@ -542,7 +549,7 @@
   };
 
   // src/examples/tracking-bridge-demo.ts
-  var SESSION_ID = "a9831464-cde5-4fbe-8c5c-44c8c650b6c3";
+  var SESSION_ID = "165f0983-8258-479f-a18b-7ba5568d2c88";
   var lastTxId = null;
   var cashier = new CashierSDK({
     device: "AUTO" /* AUTO */,
@@ -610,7 +617,7 @@
     sendToBridge("PAYMENT_SUCCESS");
   });
   document.getElementById("btn-failed")?.addEventListener("click", () => {
-    sendToBridge("PAYMENT_DECLINED");
+    sendToBridge("PAYMENT_FAILED");
   });
   document.getElementById("btn-duplicate")?.addEventListener("click", () => {
     const bridge = document.getElementById("omno-tracking-bridge");

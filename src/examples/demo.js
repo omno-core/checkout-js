@@ -330,12 +330,18 @@
       }
       const iframe = document.createElement("iframe");
       iframe.id = TRACKING_BRIDGE_ID;
-      iframe.src = this.bridgeUrl;
       iframe.style.cssText = "display:none;width:0;height:0;border:none;position:absolute;pointer-events:none;";
       iframe.setAttribute("aria-hidden", "true");
       iframe.setAttribute("tabindex", "-1");
       document.body.appendChild(iframe);
       this.trackingBridge = iframe;
+    }
+    updateTrackingBridgeSession() {
+      if (!this.trackingBridge || !this.currentSessionId) return;
+      const bridgeUrlWithSession = `${this.bridgeUrl}?sessionId=${encodeURIComponent(this.currentSessionId)}`;
+      if (this.trackingBridge.src !== bridgeUrlWithSession) {
+        this.trackingBridge.src = bridgeUrlWithSession;
+      }
     }
     forwardToTrackingBridge(type, data) {
       if (!this.trackingBridge?.contentWindow) return;
@@ -488,6 +494,7 @@
           });
         }
         this.currentSessionId = sessionId2;
+        this.updateTrackingBridgeSession();
         this.emit("iframeOpened" /* IFRAME_OPENED */, { sessionId: sessionId2 });
       } catch (err) {
         throw err instanceof CashierError ? err : new CashierError("UNKNOWN" /* UNKNOWN */, "Failed to open cashier", err);
@@ -542,7 +549,7 @@
   };
 
   // src/examples/demo.ts
-  var sessionId = "1fa7bb98-b10f-4114-98c6-386dfc211c71";
+  var sessionId = "b99b864f-78e4-4917-9c83-800c1a4e1164";
   var cashier = new CashierSDK({
     device: "AUTO" /* AUTO */,
     styles: {

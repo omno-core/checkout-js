@@ -65,7 +65,8 @@ export type PaymentEmitEventData = {
   currency: string,
   orderId?: string,
   amount?: number,
-  merchantTransactionId?: string
+  merchantTransactionId?: string,
+  timestamp?: string
 }
 
 export type KYCRequiredFieldErrorsData = {

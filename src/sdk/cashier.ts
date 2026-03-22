@@ -72,7 +72,6 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
 
     const iframe = document.createElement("iframe");
     iframe.id = TRACKING_BRIDGE_ID;
-    iframe.src = this.bridgeUrl;
     iframe.style.cssText =
         "display:none;width:0;height:0;border:none;position:absolute;pointer-events:none;";
     iframe.setAttribute("aria-hidden", "true");
@@ -80,6 +79,15 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
 
     document.body.appendChild(iframe);
     this.trackingBridge = iframe;
+  }
+
+  private updateTrackingBridgeSession(): void {
+    if (!this.trackingBridge || !this.currentSessionId) return;
+
+    const bridgeUrlWithSession = `${this.bridgeUrl}?sessionId=${encodeURIComponent(this.currentSessionId)}`;
+    if (this.trackingBridge.src !== bridgeUrlWithSession) {
+      this.trackingBridge.src = bridgeUrlWithSession;
+    }
   }
 
   private forwardToTrackingBridge(type: string, data: PaymentEmitEventData): void {
@@ -264,6 +272,7 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
       }
 
       this.currentSessionId = sessionId;
+      this.updateTrackingBridgeSession();
       this.emit(CashierEmitEvent.IFRAME_OPENED, { sessionId });
     } catch (err) {
       throw err instanceof CashierError

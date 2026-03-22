@@ -8,7 +8,7 @@ import {
     type PaymentEmitEventData,
 } from "../sdk/types";
 
-const SESSION_ID = "a9831464-cde5-4fbe-8c5c-44c8c650b6c3";
+const SESSION_ID = "165f0983-8258-479f-a18b-7ba5568d2c88";
 let lastTxId: string | null = null;
 
 const cashier = new CashierSDK({
@@ -93,7 +93,7 @@ document.getElementById("btn-success")?.addEventListener("click", () => {
 });
 
 document.getElementById("btn-failed")?.addEventListener("click", () => {
-    sendToBridge("PAYMENT_DECLINED");
+    sendToBridge("PAYMENT_FAILED");
 });
 
 document.getElementById("btn-duplicate")?.addEventListener("click", () => {
