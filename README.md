@@ -12,6 +12,7 @@ interfaces. Built with TypeScript for type safety and enhanced developer experie
 - 📊 **Event-Driven** - Comprehensive event system for payment lifecycle tracking
 - 🌐 **Cross-Platform** - Works across all modern browsers and devices
 - 📝 **TypeScript Support** - Full type definitions included
+- 🌍 **Dynamic Language** - Set the cashier language at runtime via a postMessage event
 
 ## Installation
 
@@ -250,6 +251,28 @@ cashier.getDeviceType();
 // Get current session Id
 cashier.getSessionId();
 ```
+
+## Dynamic Language
+
+The cashier language can be set at runtime by posting a `SET_LANGUAGE` message from the merchant page. The SDK picks up this event and forwards it to the cashier iframe.
+
+This works whether the message is posted **before** or **after** calling `cashier.open()`:
+- If posted before opening, the language is stored and sent to the iframe once the cashier finishes loading.
+- If posted after opening, the language is forwarded to the iframe immediately.
+
+```typescript
+// Set the cashier language to Turkish
+window.postMessage({ type: "SET_LANGUAGE", data: { language: "tr" } }, "*");
+```
+
+```typescript
+// Any BCP 47 language tag is supported
+window.postMessage({ type: "SET_LANGUAGE", data: { language: "en" } }, "*");
+window.postMessage({ type: "SET_LANGUAGE", data: { language: "tr" } }, "*");
+window.postMessage({ type: "SET_LANGUAGE", data: { language: "de" } }, "*");
+```
+
+> **Note:** The language value must be supported by the cashier backend. Check with your integration team for the list of supported language codes.
 
 ## Mobile Optimization
 

@@ -85,6 +85,11 @@ export enum CashierParentMessageType {
   SET_DEVICE = "SET_DEVICE",
   SET_OPENED_IN = "SET_OPENED_IN",
   SET_PARENT_URL = "SET_PARENT_URL",
+  SET_LANGUAGE = "SET_LANGUAGE",
+}
+
+export enum MerchantMessageType {
+  SET_LANGUAGE = "SET_LANGUAGE",
 }
 
 // cashierSdk Properties

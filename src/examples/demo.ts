@@ -9,7 +9,7 @@ import {
   type PaymentEmitEventData
 } from "../sdk/types";
 
-const sessionId = "b99b864f-78e4-4917-9c83-800c1a4e1164";
+const sessionId = "9e644c30-0851-4ad9-bebf-c1c7e24af83d";
 
 // 1. Initialize SDK
 const cashier = new CashierSDK({
@@ -119,5 +119,14 @@ document.getElementById("btn-reload")?.addEventListener("click", () => {
 // 8. Destroy the cashier instance completely
 document.getElementById("btn-destroy")?.addEventListener("click", () => {
   cashier.destroy();
+});
+
+// 9. Set language dynamically
+document.querySelectorAll("[data-lang]").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const language = (btn as HTMLElement).dataset.lang!;
+    console.log(`🌍 Setting language: ${language}`);
+    window.postMessage({ type: "SET_LANGUAGE", data: { language } }, "*");
+  });
 });
 

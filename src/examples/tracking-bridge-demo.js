@@ -353,6 +353,16 @@
         this.handleBridgeMessage(type, data);
         return;
       }
+      if (type === "SET_LANGUAGE" /* SET_LANGUAGE */) {
+        this.currentLanguage = data?.language;
+        if (this.iframe?.contentWindow && this.currentLanguage) {
+          this.iframe.contentWindow.postMessage(
+            { type: "SET_LANGUAGE" /* SET_LANGUAGE */, data: { language: this.currentLanguage } },
+            "*"
+          );
+        }
+        return;
+      }
       if (!this.iframe?.contentWindow) return;
       if (!Object.values(CashierMessageType).includes(type)) {
         this.handleBridgeMessage(type, data);
@@ -393,6 +403,15 @@
               {
                 type: "SET_PARENT_URL" /* SET_PARENT_URL */,
                 data: { parentUrl: this.parentUrl }
+              },
+              "*"
+            );
+          }
+          if (this.currentLanguage) {
+            this.iframe.contentWindow.postMessage(
+              {
+                type: "SET_LANGUAGE" /* SET_LANGUAGE */,
+                data: { language: this.currentLanguage }
               },
               "*"
             );

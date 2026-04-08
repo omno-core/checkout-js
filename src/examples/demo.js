@@ -353,6 +353,16 @@
         this.handleBridgeMessage(type, data);
         return;
       }
+      if (type === "SET_LANGUAGE" /* SET_LANGUAGE */) {
+        this.currentLanguage = data?.language;
+        if (this.iframe?.contentWindow && this.currentLanguage) {
+          this.iframe.contentWindow.postMessage(
+            { type: "SET_LANGUAGE" /* SET_LANGUAGE */, data: { language: this.currentLanguage } },
+            "*"
+          );
+        }
+        return;
+      }
       if (!this.iframe?.contentWindow) return;
       if (!Object.values(CashierMessageType).includes(type)) {
         this.handleBridgeMessage(type, data);
@@ -393,6 +403,15 @@
               {
                 type: "SET_PARENT_URL" /* SET_PARENT_URL */,
                 data: { parentUrl: this.parentUrl }
+              },
+              "*"
+            );
+          }
+          if (this.currentLanguage) {
+            this.iframe.contentWindow.postMessage(
+              {
+                type: "SET_LANGUAGE" /* SET_LANGUAGE */,
+                data: { language: this.currentLanguage }
               },
               "*"
             );
@@ -549,7 +568,7 @@
   };
 
   // src/examples/demo.ts
-  var sessionId = "b99b864f-78e4-4917-9c83-800c1a4e1164";
+  var sessionId = "9e644c30-0851-4ad9-bebf-c1c7e24af83d";
   var cashier = new CashierSDK({
     device: "AUTO" /* AUTO */,
     styles: {
@@ -630,5 +649,12 @@
   });
   document.getElementById("btn-destroy")?.addEventListener("click", () => {
     cashier.destroy();
+  });
+  document.querySelectorAll("[data-lang]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const language = btn.dataset.lang;
+      console.log(`\u{1F30D} Setting language: ${language}`);
+      window.postMessage({ type: "SET_LANGUAGE", data: { language } }, "*");
+    });
   });
 })();

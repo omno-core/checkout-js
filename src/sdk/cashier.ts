@@ -7,6 +7,7 @@ import {
   type CashierEventMap,
   CashierMessageType,
   CashierParentMessageType,
+  MerchantMessageType,
   type CashierProperties,
   DeviceType,
   KYCRequiredFieldErrorsData, KYCRequiredLevelErrorsData,
@@ -27,6 +28,7 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
   private isOpenedIn?: "Container" | "Modal";
   private currentPaymentAction?: PaymentAction;
   private currentSessionId?: string;
+  private currentLanguage?: string;
   private cashierProperties: ResolvedCashierProperties;
   private readonly boundMessageHandler: (event: MessageEvent) => void;
   private readonly parentUrl: string | undefined = undefined;
@@ -105,6 +107,17 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
       return;
     }
 
+    if (type === MerchantMessageType.SET_LANGUAGE) {
+      this.currentLanguage = data?.language;
+      if (this.iframe?.contentWindow && this.currentLanguage) {
+        this.iframe.contentWindow.postMessage(
+            { type: CashierParentMessageType.SET_LANGUAGE, data: { language: this.currentLanguage } },
+            "*"
+        );
+      }
+      return;
+    }
+
     if (!this.iframe?.contentWindow) return;
     if (!Object.values(CashierMessageType).includes(type as CashierMessageType)) {
       this.handleBridgeMessage(type, data);
@@ -148,6 +161,15 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
               {
                 type: CashierParentMessageType.SET_PARENT_URL,
                 data: { parentUrl: this.parentUrl }
+              },
+              "*"
+          );
+        }
+        if (this.currentLanguage) {
+          this.iframe.contentWindow.postMessage(
+              {
+                type: CashierParentMessageType.SET_LANGUAGE,
+                data: { language: this.currentLanguage }
               },
               "*"
           );
