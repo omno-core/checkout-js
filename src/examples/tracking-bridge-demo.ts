@@ -46,9 +46,9 @@ cashier.on(CashierEmitEvent.PAYMENT_CANCELED, (data) => {
     console.warn("⚠️ PAYMENT_CANCELED", data);
 });
 
-cashier.on(CashierEmitEvent.ANALYTICS_EVENT, (data: PaymentEmitEventData) => {
-    console.log("🎯 ANALYTICS_EVENT (deduplicated)", data);
-});
+// cashier.on(CashierEmitEvent.ANALYTICS_EVENT, (data: PaymentEmitEventData) => { // TRACKING_BRIDGE: disabled
+//     console.log("🎯 ANALYTICS_EVENT (deduplicated)", data);
+// });
 
 document.getElementById("btn-open")?.addEventListener("click", () => {
     cashier.open({ sessionId: SESSION_ID });
@@ -63,63 +63,56 @@ document.getElementById("btn-destroy")?.addEventListener("click", () => {
 });
 
 
-function sendToBridge(type: string): void {
-    const bridge = document.getElementById("omno-tracking-bridge") as HTMLIFrameElement | null;
+// TRACKING_BRIDGE: disabled — uncomment to re-enable
+// function sendToBridge(type: string): void {
+//     const bridge = document.getElementById("omno-tracking-bridge") as HTMLIFrameElement | null;
+//     if (!bridge?.contentWindow) {
+//         console.warn("Bridge iframe not found — open cashier first");
+//         return;
+//     }
+//     lastTxId = `txId_${Math.random().toString(36).substr(2, 8)}`;
+//     const payload = {
+//         type,
+//         data: {
+//             transactionId: lastTxId,
+//             status: type,
+//             currency: "USD",
+//             orderId: `order_${Date.now()}`,
+//             amount: parseFloat((Math.random() * 500).toFixed(2)),
+//             merchantTransactionId: `mTx_${Date.now()}`,
+//         } satisfies PaymentEmitEventData,
+//     };
+//     bridge.contentWindow.postMessage(payload, "*");
+// }
 
-    if (!bridge?.contentWindow) {
-        console.warn("Bridge iframe not found — open cashier first");
-        return;
-    }
+// document.getElementById("btn-success")?.addEventListener("click", () => {
+//     sendToBridge("PAYMENT_SUCCESS");
+// });
 
-    lastTxId = `txId_${Math.random().toString(36).substr(2, 8)}`;
+// document.getElementById("btn-failed")?.addEventListener("click", () => {
+//     sendToBridge("PAYMENT_FAILED");
+// });
 
-    const payload = {
-        type,
-        data: {
-            transactionId: lastTxId,
-            status: type,
-            currency: "USD",
-            orderId: `order_${Date.now()}`,
-            amount: parseFloat((Math.random() * 500).toFixed(2)),
-            merchantTransactionId: `mTx_${Date.now()}`,
-        } satisfies PaymentEmitEventData,
-    };
-    bridge.contentWindow.postMessage(payload, "*");
-
-}
-
-document.getElementById("btn-success")?.addEventListener("click", () => {
-    sendToBridge("PAYMENT_SUCCESS");
-});
-
-document.getElementById("btn-failed")?.addEventListener("click", () => {
-    sendToBridge("PAYMENT_FAILED");
-});
-
-document.getElementById("btn-duplicate")?.addEventListener("click", () => {
-    const bridge = document.getElementById("omno-tracking-bridge") as HTMLIFrameElement | null;
-
-    if (!bridge?.contentWindow) {
-        console.warn("Bridge iframe not found");
-        return;
-    }
-
-    if (!lastTxId) {
-        console.warn("Send a normal event first to get a txId to duplicate");
-        return;
-    }
-
-    bridge.contentWindow.postMessage({
-        type: "PAYMENT_SUCCESS",
-        data: {
-            transactionId: lastTxId,
-            status: "PAYMENT_SUCCESS",
-            currency: "USD",
-            orderId: `order_${Date.now()}`,
-            amount: 99.99,
-            merchantTransactionId: `mTx_dup_${Date.now()}`,
-        } satisfies PaymentEmitEventData,
-    }, "*");
-
-    console.warn(`→ Sent DUPLICATE | txId: ${lastTxId} — ANALYTICS_EVENT should NOT fire`);
-});
+// document.getElementById("btn-duplicate")?.addEventListener("click", () => {
+//     const bridge = document.getElementById("omno-tracking-bridge") as HTMLIFrameElement | null;
+//     if (!bridge?.contentWindow) {
+//         console.warn("Bridge iframe not found");
+//         return;
+//     }
+//     if (!lastTxId) {
+//         console.warn("Send a normal event first to get a txId to duplicate");
+//         return;
+//     }
+//     bridge.contentWindow.postMessage({
+//         type: "PAYMENT_SUCCESS",
+//         data: {
+//             transactionId: lastTxId,
+//             status: "PAYMENT_SUCCESS",
+//             currency: "USD",
+//             orderId: `order_${Date.now()}`,
+//             amount: 99.99,
+//             merchantTransactionId: `mTx_dup_${Date.now()}`,
+//         } satisfies PaymentEmitEventData,
+//     }, "*");
+//     console.warn(`→ Sent DUPLICATE | txId: ${lastTxId} — ANALYTICS_EVENT should NOT fire`);
+// });

@@ -19,7 +19,7 @@ import {
 import {CashierError, CashierErrorCode} from "../util/cashier-error";
 import {DEFAULT_MOBILE_STYLES, DEFAULT_MODAL_STYLES} from "../ui/data";
 
-const TRACKING_BRIDGE_ID = "omno-tracking-bridge";
+// const TRACKING_BRIDGE_ID = "omno-tracking-bridge"; // TRACKING_BRIDGE: disabled
 
 export class CashierSDK extends EventEmitter<CashierEventMap> {
   private iframe?: HTMLIFrameElement;
@@ -33,8 +33,8 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
   private readonly boundMessageHandler: (event: MessageEvent) => void;
   private readonly parentUrl: string | undefined = undefined;
   private readonly baseUrl: string;
-  private trackingBridge?: HTMLIFrameElement;
-  private readonly bridgeUrl: string;
+  // private trackingBridge?: HTMLIFrameElement; // TRACKING_BRIDGE: disabled
+  // private readonly bridgeUrl: string; // TRACKING_BRIDGE: disabled
 
   constructor(options: CashierProperties) {
     super();
@@ -55,57 +55,55 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
     this.parentUrl = options.returnUrlAfterRedirection;
     this.baseUrl = `${options.baseUrl?.replace(/\/+$/, '')}/payments-v2/cashier`;
 
-    this.bridgeUrl = `${options.baseUrl?.replace(/\/+$/, '')}/tracking-bridge`;
+    // this.bridgeUrl = `${options.baseUrl?.replace(/\/+$/, '')}/tracking-bridge`; // TRACKING_BRIDGE: disabled
 
     this.boundMessageHandler = this.setupMessageListener.bind(this);
     window.addEventListener("message", this.boundMessageHandler);
-    this.injectTrackingBridge();
+    // this.injectTrackingBridge(); // TRACKING_BRIDGE: disabled
     window.addEventListener("load", () => {
       const sessionId = new URLSearchParams(window.location.search).get("omCashierSessionIdNo");
       if (sessionId) this.open({ sessionId: sessionId });
     });
   }
 
-  private injectTrackingBridge(): void {
-    if (document.getElementById(TRACKING_BRIDGE_ID)) {
-      this.trackingBridge = document.getElementById(TRACKING_BRIDGE_ID) as HTMLIFrameElement;
-      return;
-    }
+  // TRACKING_BRIDGE: disabled — uncomment to re-enable
+  // private injectTrackingBridge(): void {
+  //   if (document.getElementById(TRACKING_BRIDGE_ID)) {
+  //     this.trackingBridge = document.getElementById(TRACKING_BRIDGE_ID) as HTMLIFrameElement;
+  //     return;
+  //   }
+  //   const iframe = document.createElement("iframe");
+  //   iframe.id = TRACKING_BRIDGE_ID;
+  //   iframe.style.cssText =
+  //       "display:none;width:0;height:0;border:none;position:absolute;pointer-events:none;";
+  //   iframe.setAttribute("aria-hidden", "true");
+  //   iframe.setAttribute("tabindex", "-1");
+  //   document.body.appendChild(iframe);
+  //   this.trackingBridge = iframe;
+  // }
 
-    const iframe = document.createElement("iframe");
-    iframe.id = TRACKING_BRIDGE_ID;
-    iframe.style.cssText =
-        "display:none;width:0;height:0;border:none;position:absolute;pointer-events:none;";
-    iframe.setAttribute("aria-hidden", "true");
-    iframe.setAttribute("tabindex", "-1");
+  // private updateTrackingBridgeSession(): void {
+  //   if (!this.trackingBridge || !this.currentSessionId) return;
+  //   const bridgeUrlWithSession = `${this.bridgeUrl}?sessionId=${encodeURIComponent(this.currentSessionId)}`;
+  //   if (this.trackingBridge.src !== bridgeUrlWithSession) {
+  //     this.trackingBridge.src = bridgeUrlWithSession;
+  //   }
+  // }
 
-    document.body.appendChild(iframe);
-    this.trackingBridge = iframe;
-  }
-
-  private updateTrackingBridgeSession(): void {
-    if (!this.trackingBridge || !this.currentSessionId) return;
-
-    const bridgeUrlWithSession = `${this.bridgeUrl}?sessionId=${encodeURIComponent(this.currentSessionId)}`;
-    if (this.trackingBridge.src !== bridgeUrlWithSession) {
-      this.trackingBridge.src = bridgeUrlWithSession;
-    }
-  }
-
-  private forwardToTrackingBridge(type: string, data: PaymentEmitEventData): void {
-    if (!this.trackingBridge?.contentWindow) return;
-
-    this.trackingBridge.contentWindow.postMessage({ type, data }, "*");
-  }
+  // private forwardToTrackingBridge(type: string, data: PaymentEmitEventData): void {
+  //   if (!this.trackingBridge?.contentWindow) return;
+  //   this.trackingBridge.contentWindow.postMessage({ type, data }, "*");
+  // }
 
 
   private setupMessageListener(event: MessageEvent): void {
     const { type, data } = event.data ?? {};
 
-    if (type === "OMNO_BRIDGE_READY" || type === "OMNO_TRACKING_EVENT") {
-      this.handleBridgeMessage(type, data);
-      return;
-    }
+    // TRACKING_BRIDGE: disabled
+    // if (type === "OMNO_BRIDGE_READY" || type === "OMNO_TRACKING_EVENT") {
+    //   this.handleBridgeMessage(type, data);
+    //   return;
+    // }
 
     if (type === MerchantMessageType.SET_LANGUAGE) {
       this.currentLanguage = data?.language;
@@ -119,10 +117,11 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
     }
 
     if (!this.iframe?.contentWindow) return;
-    if (!Object.values(CashierMessageType).includes(type as CashierMessageType)) {
-      this.handleBridgeMessage(type, data);
-      return;
-    }
+    // TRACKING_BRIDGE: disabled
+    // if (!Object.values(CashierMessageType).includes(type as CashierMessageType)) {
+    //   this.handleBridgeMessage(type, data);
+    //   return;
+    // }
 
     if (!this.isValidOrigin(event.origin)) {
       throw new CashierError(
@@ -199,26 +198,27 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
 
       case CashierMessageType.PAYMENT_SUCCESS:
         this.emit(CashierEmitEvent.PAYMENT_SUCCESS, data as PaymentEmitEventData);
-        this.forwardToTrackingBridge("PAYMENT_SUCCESS", data as PaymentEmitEventData);
+        // this.forwardToTrackingBridge("PAYMENT_SUCCESS", data as PaymentEmitEventData); // TRACKING_BRIDGE: disabled
         break;
 
       case CashierMessageType.PAYMENT_FAILED:
         this.emit(CashierEmitEvent.PAYMENT_FAILED, data as PaymentEmitEventData);
-        this.forwardToTrackingBridge("PAYMENT_FAILED", data as PaymentEmitEventData);
+        // this.forwardToTrackingBridge("PAYMENT_FAILED", data as PaymentEmitEventData); // TRACKING_BRIDGE: disabled
         break;
 
       case CashierMessageType.PAYMENT_PENDING:
         this.emit(CashierEmitEvent.PAYMENT_PENDING, data as PaymentEmitEventData);
-        this.forwardToTrackingBridge("PAYMENT_PENDING", data as PaymentEmitEventData);
+        // this.forwardToTrackingBridge("PAYMENT_PENDING", data as PaymentEmitEventData); // TRACKING_BRIDGE: disabled
         break;
 
       case CashierMessageType.PAYMENT_CANCELED:
         this.emit(CashierEmitEvent.PAYMENT_CANCELED, data as PaymentEmitEventData);
-        this.forwardToTrackingBridge("PAYMENT_CANCELED", data as PaymentEmitEventData);
+        // this.forwardToTrackingBridge("PAYMENT_CANCELED", data as PaymentEmitEventData); // TRACKING_BRIDGE: disabled
         break;
 
       case CashierMessageType.MOBILE_OVERLAY_CLICKED:
         this.emit(CashierEmitEvent.OVERLAY_CLICKED, undefined);
+        this.close();
         break;
 
       default:
@@ -227,16 +227,16 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
     }
   }
 
-  private handleBridgeMessage(type: string, data: unknown): void {
-    switch (type) {
-      case "OMNO_BRIDGE_READY":
-        break;
-
-      case "OMNO_TRACKING_EVENT":
-        this.emit(CashierEmitEvent.ANALYTICS_EVENT, data as PaymentEmitEventData);
-        break;
-    }
-  }
+  // TRACKING_BRIDGE: disabled — uncomment to re-enable
+  // private handleBridgeMessage(type: string, data: unknown): void {
+  //   switch (type) {
+  //     case "OMNO_BRIDGE_READY":
+  //       break;
+  //     case "OMNO_TRACKING_EVENT":
+  //       this.emit(CashierEmitEvent.ANALYTICS_EVENT, data as PaymentEmitEventData);
+  //       break;
+  //   }
+  // }
 
   private isValidOrigin(origin: string): boolean {
     try {
@@ -287,14 +287,20 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
         this.loader = loader;
       }
 
-      if (this.container?.classList.contains("cashier-modal-overlay")) {
-        this.container.addEventListener("click", () => {
-          this.emit(CashierEmitEvent.OVERLAY_CLICKED, undefined);
+      if (
+        this.container?.classList.contains("cashier-modal-overlay") ||
+        this.container?.classList.contains("cashier-mobile-overlay")
+      ) {
+        this.container.addEventListener("click", (e) => {
+          if (e.target === this.container) {
+            this.emit(CashierEmitEvent.OVERLAY_CLICKED, undefined);
+            this.close();
+          }
         });
       }
 
       this.currentSessionId = sessionId;
-      this.updateTrackingBridgeSession();
+      // this.updateTrackingBridgeSession(); // TRACKING_BRIDGE: disabled
       this.emit(CashierEmitEvent.IFRAME_OPENED, { sessionId });
     } catch (err) {
       throw err instanceof CashierError
@@ -342,8 +348,8 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
 
   destroy() {
     window.removeEventListener("message", this.boundMessageHandler);
-    document.getElementById(TRACKING_BRIDGE_ID)?.remove();
-    this.trackingBridge = undefined;
+    // document.getElementById(TRACKING_BRIDGE_ID)?.remove(); // TRACKING_BRIDGE: disabled
+    // this.trackingBridge = undefined; // TRACKING_BRIDGE: disabled
     this.close();
     this.emit(CashierEmitEvent.IFRAME_DESTROYED, undefined);
   }

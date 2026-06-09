@@ -294,7 +294,7 @@
   };
 
   // src/sdk/cashier.ts
-  var TRACKING_BRIDGE_ID = "omno-tracking-bridge";
+  // var TRACKING_BRIDGE_ID = "omno-tracking-bridge"; // TRACKING_BRIDGE: disabled
   var CashierSDK = class extends EventEmitter {
     constructor(options) {
       super();
@@ -314,45 +314,47 @@
       }
       this.parentUrl = options.returnUrlAfterRedirection;
       this.baseUrl = `${options.baseUrl?.replace(/\/+$/, "")}/payments-v2/cashier`;
-      this.bridgeUrl = `${options.baseUrl?.replace(/\/+$/, "")}/tracking-bridge`;
+      // this.bridgeUrl = `${options.baseUrl?.replace(/\/+$/, "")}/tracking-bridge`; // TRACKING_BRIDGE: disabled
       this.boundMessageHandler = this.setupMessageListener.bind(this);
       window.addEventListener("message", this.boundMessageHandler);
-      this.injectTrackingBridge();
+      // this.injectTrackingBridge(); // TRACKING_BRIDGE: disabled
       window.addEventListener("load", () => {
         const sessionId2 = new URLSearchParams(window.location.search).get("omCashierSessionIdNo");
         if (sessionId2) this.open({ sessionId: sessionId2 });
       });
     }
-    injectTrackingBridge() {
-      if (document.getElementById(TRACKING_BRIDGE_ID)) {
-        this.trackingBridge = document.getElementById(TRACKING_BRIDGE_ID);
-        return;
-      }
-      const iframe = document.createElement("iframe");
-      iframe.id = TRACKING_BRIDGE_ID;
-      iframe.style.cssText = "display:none;width:0;height:0;border:none;position:absolute;pointer-events:none;";
-      iframe.setAttribute("aria-hidden", "true");
-      iframe.setAttribute("tabindex", "-1");
-      document.body.appendChild(iframe);
-      this.trackingBridge = iframe;
-    }
-    updateTrackingBridgeSession() {
-      if (!this.trackingBridge || !this.currentSessionId) return;
-      const bridgeUrlWithSession = `${this.bridgeUrl}?sessionId=${encodeURIComponent(this.currentSessionId)}`;
-      if (this.trackingBridge.src !== bridgeUrlWithSession) {
-        this.trackingBridge.src = bridgeUrlWithSession;
-      }
-    }
-    forwardToTrackingBridge(type, data) {
-      if (!this.trackingBridge?.contentWindow) return;
-      this.trackingBridge.contentWindow.postMessage({ type, data }, "*");
-    }
+    // TRACKING_BRIDGE: disabled — uncomment to re-enable
+    // injectTrackingBridge() {
+    //   if (document.getElementById(TRACKING_BRIDGE_ID)) {
+    //     this.trackingBridge = document.getElementById(TRACKING_BRIDGE_ID);
+    //     return;
+    //   }
+    //   const iframe = document.createElement("iframe");
+    //   iframe.id = TRACKING_BRIDGE_ID;
+    //   iframe.style.cssText = "display:none;width:0;height:0;border:none;position:absolute;pointer-events:none;";
+    //   iframe.setAttribute("aria-hidden", "true");
+    //   iframe.setAttribute("tabindex", "-1");
+    //   document.body.appendChild(iframe);
+    //   this.trackingBridge = iframe;
+    // }
+    // updateTrackingBridgeSession() {
+    //   if (!this.trackingBridge || !this.currentSessionId) return;
+    //   const bridgeUrlWithSession = `${this.bridgeUrl}?sessionId=${encodeURIComponent(this.currentSessionId)}`;
+    //   if (this.trackingBridge.src !== bridgeUrlWithSession) {
+    //     this.trackingBridge.src = bridgeUrlWithSession;
+    //   }
+    // }
+    // forwardToTrackingBridge(type, data) {
+    //   if (!this.trackingBridge?.contentWindow) return;
+    //   this.trackingBridge.contentWindow.postMessage({ type, data }, "*");
+    // }
     setupMessageListener(event) {
       const { type, data } = event.data ?? {};
-      if (type === "OMNO_BRIDGE_READY" || type === "OMNO_TRACKING_EVENT") {
-        this.handleBridgeMessage(type, data);
-        return;
-      }
+      // TRACKING_BRIDGE: disabled
+      // if (type === "OMNO_BRIDGE_READY" || type === "OMNO_TRACKING_EVENT") {
+      //   this.handleBridgeMessage(type, data);
+      //   return;
+      // }
       if (type === "SET_LANGUAGE" /* SET_LANGUAGE */) {
         this.currentLanguage = data?.language;
         if (this.iframe?.contentWindow && this.currentLanguage) {
@@ -364,10 +366,11 @@
         return;
       }
       if (!this.iframe?.contentWindow) return;
-      if (!Object.values(CashierMessageType).includes(type)) {
-        this.handleBridgeMessage(type, data);
-        return;
-      }
+      // TRACKING_BRIDGE: disabled
+      // if (!Object.values(CashierMessageType).includes(type)) {
+      //   this.handleBridgeMessage(type, data);
+      //   return;
+      // }
       if (!this.isValidOrigin(event.origin)) {
         throw new CashierError(
           "INVALID_ORIGIN" /* INVALID_ORIGIN */,
@@ -435,19 +438,19 @@
           break;
         case "PAYMENT_SUCCESS" /* PAYMENT_SUCCESS */:
           this.emit("paymentSuccess" /* PAYMENT_SUCCESS */, data);
-          this.forwardToTrackingBridge("PAYMENT_SUCCESS", data);
+          // this.forwardToTrackingBridge("PAYMENT_SUCCESS", data); // TRACKING_BRIDGE: disabled
           break;
         case "PAYMENT_FAILED" /* PAYMENT_FAILED */:
           this.emit("paymentFailed" /* PAYMENT_FAILED */, data);
-          this.forwardToTrackingBridge("PAYMENT_FAILED", data);
+          // this.forwardToTrackingBridge("PAYMENT_FAILED", data); // TRACKING_BRIDGE: disabled
           break;
         case "PAYMENT_PENDING" /* PAYMENT_PENDING */:
           this.emit("paymentPending" /* PAYMENT_PENDING */, data);
-          this.forwardToTrackingBridge("PAYMENT_PENDING", data);
+          // this.forwardToTrackingBridge("PAYMENT_PENDING", data); // TRACKING_BRIDGE: disabled
           break;
         case "PAYMENT_CANCELED" /* PAYMENT_CANCELED */:
           this.emit("paymentCanceled" /* PAYMENT_CANCELED */, data);
-          this.forwardToTrackingBridge("PAYMENT_CANCELED", data);
+          // this.forwardToTrackingBridge("PAYMENT_CANCELED", data); // TRACKING_BRIDGE: disabled
           break;
         case "MOBILE_OVERLAY_CLICKED" /* MOBILE_OVERLAY_CLICKED */:
           this.emit("overlayClicked" /* OVERLAY_CLICKED */, void 0);
@@ -457,15 +460,16 @@
           break;
       }
     }
-    handleBridgeMessage(type, data) {
-      switch (type) {
-        case "OMNO_BRIDGE_READY":
-          break;
-        case "OMNO_TRACKING_EVENT":
-          this.emit("ANALYTICS_EVENT" /* ANALYTICS_EVENT */, data);
-          break;
-      }
-    }
+    // TRACKING_BRIDGE: disabled — uncomment to re-enable
+    // handleBridgeMessage(type, data) {
+    //   switch (type) {
+    //     case "OMNO_BRIDGE_READY":
+    //       break;
+    //     case "OMNO_TRACKING_EVENT":
+    //       this.emit("ANALYTICS_EVENT" /* ANALYTICS_EVENT */, data);
+    //       break;
+    //   }
+    // }
     isValidOrigin(origin) {
       try {
         return true ? true : new URL(this.baseUrl).origin === origin;
@@ -513,7 +517,7 @@
           });
         }
         this.currentSessionId = sessionId2;
-        this.updateTrackingBridgeSession();
+        // this.updateTrackingBridgeSession(); // TRACKING_BRIDGE: disabled
         this.emit("iframeOpened" /* IFRAME_OPENED */, { sessionId: sessionId2 });
       } catch (err) {
         throw err instanceof CashierError ? err : new CashierError("UNKNOWN" /* UNKNOWN */, "Failed to open cashier", err);
@@ -551,8 +555,8 @@
     }
     destroy() {
       window.removeEventListener("message", this.boundMessageHandler);
-      document.getElementById(TRACKING_BRIDGE_ID)?.remove();
-      this.trackingBridge = void 0;
+      // document.getElementById(TRACKING_BRIDGE_ID)?.remove(); // TRACKING_BRIDGE: disabled
+      // this.trackingBridge = void 0; // TRACKING_BRIDGE: disabled
       this.close();
       this.emit("iframeDestroyed" /* IFRAME_DESTROYED */, void 0);
     }
@@ -629,9 +633,9 @@
   cashier.on("kycRequiredLevelErrors" /* KYC_REQUIRED_LEVEL_ERRORS */, (data) => {
     console.log("KYC Required Level Errors:", data);
   });
-  cashier.on("ANALYTICS_EVENT" /* ANALYTICS_EVENT */, (data) => {
-    console.log("Analytics Event:", data);
-  });
+  // cashier.on("ANALYTICS_EVENT" /* ANALYTICS_EVENT */, (data) => { // TRACKING_BRIDGE: disabled
+  //   console.log("Analytics Event:", data);
+  // });
   document.getElementById("btn-open")?.addEventListener("click", () => {
     cashier.open({ sessionId });
   });

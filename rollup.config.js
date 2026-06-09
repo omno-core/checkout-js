@@ -16,18 +16,18 @@ export default [
             {
                 file: 'dist/index.js',
                 format: 'cjs',
-                sourcemap: true
+                sourcemap: false
             },
             {
                 file: 'dist/index.esm.js',
                 format: 'es',
-                sourcemap: true
+                sourcemap: false
             },
             {
                 file: 'dist/index.umd.js',
                 format: 'umd',
                 name: 'CashierSDK',
-                sourcemap: true
+                sourcemap: false
             }
         ],
         plugins: [
