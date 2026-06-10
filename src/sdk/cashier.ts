@@ -64,6 +64,19 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
       const sessionId = new URLSearchParams(window.location.search).get("omCashierSessionIdNo");
       if (sessionId) this.open({ sessionId: sessionId });
     });
+    window.addEventListener("pageshow", (event: PageTransitionEvent) => {
+      if (!event.persisted || !this.isOpen() || !this.iframe) return;
+      this.softRefreshIframe();
+    });
+  }
+
+  private softRefreshIframe(): void {
+    if (!this.iframe) return;
+    if (this.loader) {
+      this.iframe.parentElement?.appendChild(this.loader);
+      this.iframe.style.opacity = "0";
+    }
+    this.iframe.src = this.iframe.src;
   }
 
   // TRACKING_BRIDGE: disabled — uncomment to re-enable

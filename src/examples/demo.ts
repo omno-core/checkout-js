@@ -9,7 +9,7 @@ import {
   type PaymentEmitEventData
 } from "../sdk/types";
 
-const sessionId = "9e644c30-0851-4ad9-bebf-c1c7e24af83d";
+const sessionId = "995edc31-130c-4268-b385-59cc8937de3a";
 
 // 1. Initialize SDK
 const cashier = new CashierSDK({
@@ -28,7 +28,7 @@ const cashier = new CashierSDK({
     } as MobileStyles,
   },
   returnUrlAfterRedirection: "http://example",
-  baseUrl: "http://localhost:5173/"
+  baseUrl: "http://10.255.103.181:5173/"
 } as CashierProperties);
 
 // 2. Register listeners
