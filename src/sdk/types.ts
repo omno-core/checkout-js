@@ -140,4 +140,5 @@ export type openCashierParameters = {
   sessionId: string;
   containerId?: string;
   paymentAction?: PaymentAction | undefined;
+  layout?: 'single';
 }

@@ -278,6 +278,13 @@
     }
   };
 
+  // src/sdk/url.ts
+  function buildCashierUrl(baseUrl, sessionId2, paymentAction, layout) {
+    const suffix = paymentAction ? paymentAction.toLowerCase() : void 0;
+    const path = suffix ? `${baseUrl}/${sessionId2}/${suffix}` : `${baseUrl}/${sessionId2}`;
+    return layout === "single" ? `${path}?layout=single` : path;
+  }
+
   // src/sdk/cashier.ts
   var CashierSDK = class extends EventEmitter {
     // private trackingBridge?: HTMLIFrameElement; // TRACKING_BRIDGE: disabled
@@ -468,16 +475,16 @@
       ) || window.innerWidth <= 768;
       return isMobile ? "MOBILE" /* MOBILE */ : "DESKTOP" /* DESKTOP */;
     }
-    buildUrl(sessionId2, paymentAction) {
-      const suffix = paymentAction ? paymentAction.toLowerCase() : void 0;
-      return suffix ? `${this.baseUrl}/${sessionId2}/${suffix}` : `${this.baseUrl}/${sessionId2}`;
+    buildUrl(sessionId2, paymentAction, layout) {
+      return buildCashierUrl(this.baseUrl, sessionId2, paymentAction, layout);
     }
-    open({ sessionId: sessionId2, containerId, paymentAction }) {
+    open({ sessionId: sessionId2, containerId, paymentAction, layout }) {
       this.emit("iframeOpenRequested" /* IFRAME_OPEN_REQUESTED */, void 0);
       if (this.isOpen() && this.currentSessionId === sessionId2) return;
       if (this.isOpen()) this.close();
       if (paymentAction) this.currentPaymentAction = paymentAction;
-      const url = this.buildUrl(sessionId2, paymentAction);
+      this.currentLayout = layout;
+      const url = this.buildUrl(sessionId2, paymentAction, layout);
       if (containerId) this.isOpenedIn = "Container";
       else this.isOpenedIn = "Modal";
       try {
@@ -534,7 +541,8 @@
       const params = {
         sessionId: this.currentSessionId,
         containerId: this.container?.id,
-        paymentAction: this.currentPaymentAction
+        paymentAction: this.currentPaymentAction,
+        layout: this.currentLayout
       };
       this.close();
       this.open(params);
@@ -556,7 +564,7 @@
   };
 
   // src/examples/demo.ts
-  var sessionId = "995edc31-130c-4268-b385-59cc8937de3a";
+  var sessionId = "60fcd896-342a-4137-9c99-a6ce93d75316";
   var cashier = new CashierSDK({
     device: "AUTO" /* AUTO */,
     styles: {
@@ -573,7 +581,7 @@
       }
     },
     returnUrlAfterRedirection: "http://example",
-    baseUrl: "http://10.255.103.181:5173/"
+    baseUrl: "http://localhost:5173/"
   });
   cashier.on("iframeOpenRequested" /* IFRAME_OPEN_REQUESTED */, () => {
     console.log("Cashier open requested");

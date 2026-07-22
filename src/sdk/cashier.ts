@@ -18,6 +18,7 @@ import {
 } from "./types";
 import {CashierError, CashierErrorCode} from "../util/cashier-error";
 import {DEFAULT_MOBILE_STYLES, DEFAULT_MODAL_STYLES} from "../ui/data";
+import {buildCashierUrl} from "./url";
 
 // const TRACKING_BRIDGE_ID = "omno-tracking-bridge"; // TRACKING_BRIDGE: disabled
 
@@ -27,6 +28,7 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
   private loader?: HTMLElement;
   private isOpenedIn?: "Container" | "Modal";
   private currentPaymentAction?: PaymentAction;
+  private currentLayout?: "single";
   private currentSessionId?: string;
   private currentLanguage?: string;
   private cashierProperties: ResolvedCashierProperties;
@@ -268,18 +270,22 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
     return isMobile ? DeviceType.MOBILE : DeviceType.DESKTOP;
   }
 
-  private buildUrl(sessionId: string, paymentAction: PaymentAction | undefined): string {
-    const suffix = paymentAction ? paymentAction.toLowerCase() : undefined;
-    return suffix ? `${this.baseUrl}/${sessionId}/${suffix}` : `${this.baseUrl}/${sessionId}`;
+  private buildUrl(
+    sessionId: string,
+    paymentAction: PaymentAction | undefined,
+    layout?: "single"
+  ): string {
+    return buildCashierUrl(this.baseUrl, sessionId, paymentAction, layout);
   }
 
-  open({ sessionId, containerId, paymentAction }: openCashierParameters) {
+  open({ sessionId, containerId, paymentAction, layout }: openCashierParameters) {
     this.emit(CashierEmitEvent.IFRAME_OPEN_REQUESTED, undefined);
     if (this.isOpen() && this.currentSessionId === sessionId) return;
     if (this.isOpen()) this.close();
 
     if (paymentAction) this.currentPaymentAction = paymentAction;
-    const url = this.buildUrl(sessionId, paymentAction);
+    this.currentLayout = layout;
+    const url = this.buildUrl(sessionId, paymentAction, layout);
 
     if (containerId) this.isOpenedIn = "Container";
     else this.isOpenedIn = "Modal";
@@ -353,6 +359,7 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
       sessionId: this.currentSessionId,
       containerId: this.container?.id,
       paymentAction: this.currentPaymentAction,
+      layout: this.currentLayout,
     };
 
     this.close();

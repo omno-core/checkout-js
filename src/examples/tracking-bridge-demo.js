@@ -278,6 +278,13 @@
     }
   };
 
+  // src/sdk/url.ts
+  function buildCashierUrl(baseUrl, sessionId, paymentAction, layout) {
+    const suffix = paymentAction ? paymentAction.toLowerCase() : void 0;
+    const path = suffix ? `${baseUrl}/${sessionId}/${suffix}` : `${baseUrl}/${sessionId}`;
+    return layout === "single" ? `${path}?layout=single` : path;
+  }
+
   // src/sdk/cashier.ts
   var CashierSDK = class extends EventEmitter {
     // private trackingBridge?: HTMLIFrameElement; // TRACKING_BRIDGE: disabled
@@ -468,16 +475,16 @@
       ) || window.innerWidth <= 768;
       return isMobile ? "MOBILE" /* MOBILE */ : "DESKTOP" /* DESKTOP */;
     }
-    buildUrl(sessionId, paymentAction) {
-      const suffix = paymentAction ? paymentAction.toLowerCase() : void 0;
-      return suffix ? `${this.baseUrl}/${sessionId}/${suffix}` : `${this.baseUrl}/${sessionId}`;
+    buildUrl(sessionId, paymentAction, layout) {
+      return buildCashierUrl(this.baseUrl, sessionId, paymentAction, layout);
     }
-    open({ sessionId, containerId, paymentAction }) {
+    open({ sessionId, containerId, paymentAction, layout }) {
       this.emit("iframeOpenRequested" /* IFRAME_OPEN_REQUESTED */, void 0);
       if (this.isOpen() && this.currentSessionId === sessionId) return;
       if (this.isOpen()) this.close();
       if (paymentAction) this.currentPaymentAction = paymentAction;
-      const url = this.buildUrl(sessionId, paymentAction);
+      this.currentLayout = layout;
+      const url = this.buildUrl(sessionId, paymentAction, layout);
       if (containerId) this.isOpenedIn = "Container";
       else this.isOpenedIn = "Modal";
       try {
@@ -534,7 +541,8 @@
       const params = {
         sessionId: this.currentSessionId,
         containerId: this.container?.id,
-        paymentAction: this.currentPaymentAction
+        paymentAction: this.currentPaymentAction,
+        layout: this.currentLayout
       };
       this.close();
       this.open(params);
