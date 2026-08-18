@@ -12,6 +12,11 @@ export enum CashierMessageType {
   PAYMENT_CANCELED = "PAYMENT_CANCELED",
 
   MOBILE_OVERLAY_CLICKED = "MOBILE_OVERLAY_CLICKED",
+
+  FIELD_READY = "FIELD_READY",
+  FIELD_VALIDITY_CHANGE = "FIELD_VALIDITY_CHANGE",
+  FIELD_FOCUS = "FIELD_FOCUS",
+  FIELD_BLUR = "FIELD_BLUR",
 }
 
 // message emitted by cashierSdk
@@ -33,6 +38,11 @@ export enum CashierEmitEvent {
   KYC_REQUIRED_FIELD_ERRORS = 'kycRequiredFieldErrors',
   KYC_REQUIRED_LEVEL_ERRORS = 'kycRequiredLevelErrors',
   ANALYTICS_EVENT = "ANALYTICS_EVENT",
+
+  FIELD_VALIDITY_CHANGE = "fieldValidityChange",
+  FIELD_FOCUS = "fieldFocus",
+  FIELD_BLUR = "fieldBlur",
+
   UNKNOWN = "unknown",
 }
 
@@ -55,6 +65,10 @@ export type CashierEventMap = {
   [CashierEmitEvent.KYC_REQUIRED_FIELD_ERRORS]: KYCRequiredFieldErrorsData[];
   [CashierEmitEvent.KYC_REQUIRED_LEVEL_ERRORS]: KYCRequiredLevelErrorsData[];
   [CashierEmitEvent.ANALYTICS_EVENT]: PaymentEmitEventData;
+
+  [CashierEmitEvent.FIELD_VALIDITY_CHANGE]: FieldValidityData;
+  [CashierEmitEvent.FIELD_FOCUS]: FieldFocusData;
+  [CashierEmitEvent.FIELD_BLUR]: FieldFocusData;
 
   [CashierEmitEvent.UNKNOWN]: { type: string; data: any };
 };
@@ -86,6 +100,9 @@ export enum CashierParentMessageType {
   SET_OPENED_IN = "SET_OPENED_IN",
   SET_PARENT_URL = "SET_PARENT_URL",
   SET_LANGUAGE = "SET_LANGUAGE",
+
+  SET_FIELD_STYLE = "SET_FIELD_STYLE",
+  SUBMIT = "SUBMIT",
 }
 
 export enum MerchantMessageType {
@@ -142,3 +159,52 @@ export type openCashierParameters = {
   paymentAction?: PaymentAction | undefined;
   layout?: 'single';
 }
+
+export type HpfFieldName = 'cardNumber' | 'expiry' | 'cvv' | 'cardholder';
+
+export interface HpfFieldConfig {
+  containerId: string;
+}
+
+export interface HpfBaseStyle {
+  color?: string;
+  fontFamily?: string;
+  fontSize?: string;
+  fontWeight?: string;
+  lineHeight?: string;
+  letterSpacing?: string;
+  textAlign?: string;
+  '::placeholder'?: { color?: string };
+}
+
+export interface HpfStyles {
+  base?: HpfBaseStyle;
+  invalid?: { color?: string };
+  placeholder?: Partial<Record<HpfFieldName, string>>;
+}
+
+export interface mountFieldsParameters {
+  sessionId: string;
+  fields: Partial<Record<HpfFieldName, HpfFieldConfig>>;
+  styles?: HpfStyles;
+}
+
+export interface HpfSubmitOptions {
+  saveCard?: boolean;
+  amount?: number | string;
+}
+
+export interface HpfHandle {
+  submit: (options?: HpfSubmitOptions) => void;
+  destroy: () => void;
+}
+
+export type FieldValidityData = {
+  field: HpfFieldName;
+  valid: boolean;
+  error?: string;
+};
+
+export type FieldFocusData = {
+  field: HpfFieldName;
+};

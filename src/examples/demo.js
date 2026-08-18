@@ -245,6 +245,15 @@
     target.appendChild(iframe);
     return iframe;
   }
+  function mountHiddenIframe(url) {
+    const iframe = document.createElement("iframe");
+    iframe.src = url;
+    iframe.setAttribute("aria-hidden", "true");
+    iframe.setAttribute("tabindex", "-1");
+    iframe.style.cssText = "display:none;width:0;height:0;border:none;position:absolute;pointer-events:none;";
+    document.body.appendChild(iframe);
+    return iframe;
+  }
 
   // src/util/event-emitter.ts
   var EventEmitter = class {
@@ -284,6 +293,19 @@
     const path = suffix ? `${baseUrl}/${sessionId2}/${suffix}` : `${baseUrl}/${sessionId2}`;
     return layout === "single" ? `${path}?layout=single` : path;
   }
+  var HPF_FIELD_SLUGS = {
+    cardNumber: "card-number",
+    expiry: "expiry",
+    cvv: "cvv",
+    cardholder: "cardholder"
+  };
+  function buildFieldUrl(originBaseUrl, field, sessionId2) {
+    const slug = HPF_FIELD_SLUGS[field];
+    return `${originBaseUrl}/embed/field/${slug}?session=${encodeURIComponent(sessionId2)}`;
+  }
+  function buildCoordinatorUrl(originBaseUrl, sessionId2) {
+    return `${originBaseUrl}/embed/coordinator?session=${encodeURIComponent(sessionId2)}`;
+  }
 
   // src/sdk/cashier.ts
   var CashierSDK = class extends EventEmitter {
@@ -292,6 +314,7 @@
     constructor(options) {
       super();
       this.parentUrl = void 0;
+      this.fieldIframes = /* @__PURE__ */ new Map();
       this.currentPaymentAction = "DEPOSIT" /* DEPOSIT */;
       this.cashierProperties = {
         device: options.device ?? this.detectDevice(),
@@ -306,7 +329,8 @@
         this.cashierProperties.device = this.detectDevice();
       }
       this.parentUrl = options.returnUrlAfterRedirection;
-      this.baseUrl = `${options.baseUrl?.replace(/\/+$/, "")}/payments-v2/cashier`;
+      this.originBaseUrl = `${options.baseUrl?.replace(/\/+$/, "")}`;
+      this.baseUrl = `${this.originBaseUrl}/payments-v2/cashier`;
       this.boundMessageHandler = this.setupMessageListener.bind(this);
       window.addEventListener("message", this.boundMessageHandler);
       window.addEventListener("load", () => {
@@ -364,6 +388,7 @@
         }
         return;
       }
+      if (this.handleFieldMessage(event)) return;
       if (!this.iframe?.contentWindow) return;
       if (!this.isValidOrigin(event.origin)) {
         throw new CashierError(
@@ -449,6 +474,105 @@
         default:
           this.emit("unknown" /* UNKNOWN */, { type, data });
           break;
+      }
+    }
+    mountFields({ sessionId: sessionId2, fields, styles }) {
+      this.destroyFields();
+      this.hpfSessionId = sessionId2;
+      this.hpfStyles = styles;
+      Object.keys(fields).forEach((field) => {
+        const config = fields[field];
+        if (!config) return;
+        const url = buildFieldUrl(this.originBaseUrl, field, sessionId2);
+        const iframe = mountInContainerWithId(url, config.containerId);
+        this.fieldIframes.set(field, iframe);
+      });
+      this.coordinatorIframe = mountHiddenIframe(
+        buildCoordinatorUrl(this.originBaseUrl, sessionId2)
+      );
+      this.emit("iframeOpened" /* IFRAME_OPENED */, { sessionId: sessionId2 });
+      return {
+        submit: (options) => this.submit(options),
+        destroy: () => this.destroyFields()
+      };
+    }
+    submit(options) {
+      if (!this.coordinatorIframe?.contentWindow) {
+        throw new CashierError(
+          "UNKNOWN" /* UNKNOWN */,
+          "No hosted fields mounted; call mountFields() before submit()"
+        );
+      }
+      this.coordinatorIframe.contentWindow.postMessage(
+        {
+          type: "SUBMIT" /* SUBMIT */,
+          data: { saveCard: options?.saveCard ?? false, amount: options?.amount }
+        },
+        "*"
+      );
+    }
+    /** Removes all mounted field iframes and the coordinator. */
+    destroyFields() {
+      this.fieldIframes.forEach((iframe) => iframe.remove());
+      this.fieldIframes.clear();
+      this.coordinatorIframe?.remove();
+      this.coordinatorIframe = void 0;
+      this.hpfStyles = void 0;
+      this.hpfSessionId = void 0;
+    }
+    handleFieldMessage(event) {
+      if (this.fieldIframes.size === 0 && !this.coordinatorIframe) return false;
+      if (!this.isValidOrigin(event.origin)) return false;
+      const { type, data } = event.data ?? {};
+      switch (type) {
+        case "FIELD_READY" /* FIELD_READY */: {
+          const field = data?.field;
+          const iframe = this.fieldIframes.get(field);
+          if (iframe?.contentWindow) {
+            if (this.hpfStyles) {
+              iframe.contentWindow.postMessage(
+                {
+                  type: "SET_FIELD_STYLE" /* SET_FIELD_STYLE */,
+                  data: { field, styles: this.hpfStyles }
+                },
+                "*"
+              );
+            }
+            if (this.currentLanguage) {
+              iframe.contentWindow.postMessage(
+                {
+                  type: "SET_LANGUAGE" /* SET_LANGUAGE */,
+                  data: { language: this.currentLanguage }
+                },
+                "*"
+              );
+            }
+          }
+          return true;
+        }
+        case "FIELD_VALIDITY_CHANGE" /* FIELD_VALIDITY_CHANGE */:
+          this.emit("fieldValidityChange" /* FIELD_VALIDITY_CHANGE */, data);
+          return true;
+        case "FIELD_FOCUS" /* FIELD_FOCUS */:
+          this.emit("fieldFocus" /* FIELD_FOCUS */, data);
+          return true;
+        case "FIELD_BLUR" /* FIELD_BLUR */:
+          this.emit("fieldBlur" /* FIELD_BLUR */, data);
+          return true;
+        case "PAYMENT_SUCCESS" /* PAYMENT_SUCCESS */:
+          this.emit("paymentSuccess" /* PAYMENT_SUCCESS */, data);
+          return true;
+        case "PAYMENT_FAILED" /* PAYMENT_FAILED */:
+          this.emit("paymentFailed" /* PAYMENT_FAILED */, data);
+          return true;
+        case "PAYMENT_PENDING" /* PAYMENT_PENDING */:
+          this.emit("paymentPending" /* PAYMENT_PENDING */, data);
+          return true;
+        case "PAYMENT_CANCELED" /* PAYMENT_CANCELED */:
+          this.emit("paymentCanceled" /* PAYMENT_CANCELED */, data);
+          return true;
+        default:
+          return false;
       }
     }
     // TRACKING_BRIDGE: disabled — uncomment to re-enable
@@ -564,7 +688,7 @@
   };
 
   // src/examples/demo.ts
-  var sessionId = "60fcd896-342a-4137-9c99-a6ce93d75316";
+  var sessionId = "10cb9ae8-894b-4fd3-8803-ed5d2c974b65";
   var cashier = new CashierSDK({
     device: "AUTO" /* AUTO */,
     styles: {

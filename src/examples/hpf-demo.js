@@ -288,9 +288,9 @@
   };
 
   // src/sdk/url.ts
-  function buildCashierUrl(baseUrl, sessionId, paymentAction, layout) {
+  function buildCashierUrl(baseUrl, sessionId2, paymentAction, layout) {
     const suffix = paymentAction ? paymentAction.toLowerCase() : void 0;
-    const path = suffix ? `${baseUrl}/${sessionId}/${suffix}` : `${baseUrl}/${sessionId}`;
+    const path = suffix ? `${baseUrl}/${sessionId2}/${suffix}` : `${baseUrl}/${sessionId2}`;
     return layout === "single" ? `${path}?layout=single` : path;
   }
   var HPF_FIELD_SLUGS = {
@@ -299,12 +299,12 @@
     cvv: "cvv",
     cardholder: "cardholder"
   };
-  function buildFieldUrl(originBaseUrl, field, sessionId) {
+  function buildFieldUrl(originBaseUrl, field, sessionId2) {
     const slug = HPF_FIELD_SLUGS[field];
-    return `${originBaseUrl}/embed/field/${slug}?session=${encodeURIComponent(sessionId)}`;
+    return `${originBaseUrl}/embed/field/${slug}?session=${encodeURIComponent(sessionId2)}`;
   }
-  function buildCoordinatorUrl(originBaseUrl, sessionId) {
-    return `${originBaseUrl}/embed/coordinator?session=${encodeURIComponent(sessionId)}`;
+  function buildCoordinatorUrl(originBaseUrl, sessionId2) {
+    return `${originBaseUrl}/embed/coordinator?session=${encodeURIComponent(sessionId2)}`;
   }
 
   // src/sdk/cashier.ts
@@ -334,8 +334,8 @@
       this.boundMessageHandler = this.setupMessageListener.bind(this);
       window.addEventListener("message", this.boundMessageHandler);
       window.addEventListener("load", () => {
-        const sessionId = new URLSearchParams(window.location.search).get("omCashierSessionIdNo");
-        if (sessionId) this.open({ sessionId });
+        const sessionId2 = new URLSearchParams(window.location.search).get("omCashierSessionIdNo");
+        if (sessionId2) this.open({ sessionId: sessionId2 });
       });
       window.addEventListener("pageshow", (event) => {
         if (!event.persisted || !this.isOpen() || !this.iframe) return;
@@ -476,21 +476,21 @@
           break;
       }
     }
-    mountFields({ sessionId, fields, styles }) {
+    mountFields({ sessionId: sessionId2, fields: fields2, styles }) {
       this.destroyFields();
-      this.hpfSessionId = sessionId;
+      this.hpfSessionId = sessionId2;
       this.hpfStyles = styles;
-      Object.keys(fields).forEach((field) => {
-        const config = fields[field];
+      Object.keys(fields2).forEach((field) => {
+        const config = fields2[field];
         if (!config) return;
-        const url = buildFieldUrl(this.originBaseUrl, field, sessionId);
+        const url = buildFieldUrl(this.originBaseUrl, field, sessionId2);
         const iframe = mountInContainerWithId(url, config.containerId);
         this.fieldIframes.set(field, iframe);
       });
       this.coordinatorIframe = mountHiddenIframe(
-        buildCoordinatorUrl(this.originBaseUrl, sessionId)
+        buildCoordinatorUrl(this.originBaseUrl, sessionId2)
       );
-      this.emit("iframeOpened" /* IFRAME_OPENED */, { sessionId });
+      this.emit("iframeOpened" /* IFRAME_OPENED */, { sessionId: sessionId2 });
       return {
         submit: (options) => this.submit(options),
         destroy: () => this.destroyFields()
@@ -599,16 +599,16 @@
       ) || window.innerWidth <= 768;
       return isMobile ? "MOBILE" /* MOBILE */ : "DESKTOP" /* DESKTOP */;
     }
-    buildUrl(sessionId, paymentAction, layout) {
-      return buildCashierUrl(this.baseUrl, sessionId, paymentAction, layout);
+    buildUrl(sessionId2, paymentAction, layout) {
+      return buildCashierUrl(this.baseUrl, sessionId2, paymentAction, layout);
     }
-    open({ sessionId, containerId, paymentAction, layout }) {
+    open({ sessionId: sessionId2, containerId, paymentAction, layout }) {
       this.emit("iframeOpenRequested" /* IFRAME_OPEN_REQUESTED */, void 0);
-      if (this.isOpen() && this.currentSessionId === sessionId) return;
+      if (this.isOpen() && this.currentSessionId === sessionId2) return;
       if (this.isOpen()) this.close();
       if (paymentAction) this.currentPaymentAction = paymentAction;
       this.currentLayout = layout;
-      const url = this.buildUrl(sessionId, paymentAction, layout);
+      const url = this.buildUrl(sessionId2, paymentAction, layout);
       if (containerId) this.isOpenedIn = "Container";
       else this.isOpenedIn = "Modal";
       try {
@@ -634,8 +634,8 @@
             }
           });
         }
-        this.currentSessionId = sessionId;
-        this.emit("iframeOpened" /* IFRAME_OPENED */, { sessionId });
+        this.currentSessionId = sessionId2;
+        this.emit("iframeOpened" /* IFRAME_OPENED */, { sessionId: sessionId2 });
       } catch (err) {
         throw err instanceof CashierError ? err : new CashierError("UNKNOWN" /* UNKNOWN */, "Failed to open cashier", err);
       }
@@ -687,45 +687,65 @@
     }
   };
 
-  // src/examples/tracking-bridge-demo.ts
-  var SESSION_ID = "165f0983-8258-479f-a18b-7ba5568d2c88";
+  // src/examples/hpf-demo.ts
+  var sessionId = "10cb9ae8-894b-4fd3-8803-ed5d2c974b65";
   var cashier = new CashierSDK({
-    device: "AUTO" /* AUTO */,
-    styles: {
-      modal: {
-        backgroundColor: "rgba(0,0,0,0.4)",
-        width: "900px",
-        height: "800px",
-        borderRadius: "12px",
-        zIndex: 9
-      },
-      mobile: {
-        backgroundColor: "rgba(0,0,0,0.4)",
-        zIndex: 10
-      }
-    },
-    returnUrlAfterRedirection: "http://example",
     baseUrl: "http://localhost:5173/"
   });
+  var fields = cashier.mountFields({
+    sessionId,
+    fields: {
+      cardholder: { containerId: "om-cardholder" },
+      cardNumber: { containerId: "om-card-number" },
+      expiry: { containerId: "om-expiry" },
+      cvv: { containerId: "om-cvv" }
+    },
+    styles: {
+      base: {
+        color: "#1a1a2e",
+        fontFamily: "-apple-system, system-ui, sans-serif",
+        fontSize: "16px",
+        "::placeholder": { color: "#98a2b3" }
+      },
+      invalid: { color: "#d92d20" },
+      placeholder: {
+        cardNumber: "0000 0000 0000 0000",
+        expiry: "MM / YY",
+        cvv: "\u2022\u2022\u2022",
+        cardholder: "Name on card"
+      }
+    }
+  });
+  var payButton = document.getElementById("pay");
+  var statusEl = document.getElementById("status");
+  var validity = {
+    cardNumber: false,
+    expiry: false,
+    cvv: false,
+    cardholder: false
+  };
+  cashier.on("fieldValidityChange" /* FIELD_VALIDITY_CHANGE */, ({ field, valid, error }) => {
+    validity[field] = valid;
+    payButton.disabled = !Object.values(validity).every(Boolean);
+    if (error) console.warn(`Field ${field}: ${error}`);
+  });
   cashier.on("paymentSuccess" /* PAYMENT_SUCCESS */, (data) => {
-    console.log("\u2705 PAYMENT_SUCCESS", data);
+    statusEl.textContent = `\u2705 Approved \u2014 transaction ${data.transactionId}`;
+    statusEl.className = "ok";
   });
   cashier.on("paymentFailed" /* PAYMENT_FAILED */, (data) => {
-    console.error("\u274C PAYMENT_FAILED", data);
+    statusEl.textContent = `\u274C Declined \u2014 ${data.status}`;
+    statusEl.className = "err";
+    payButton.disabled = false;
   });
-  cashier.on("paymentPending" /* PAYMENT_PENDING */, (data) => {
-    console.log("\u23F3 PAYMENT_PENDING", data);
+  cashier.on("paymentPending" /* PAYMENT_PENDING */, () => {
+    statusEl.textContent = "\u23F3 Processing\u2026";
+    statusEl.className = "";
   });
-  cashier.on("paymentCanceled" /* PAYMENT_CANCELED */, (data) => {
-    console.warn("\u26A0\uFE0F PAYMENT_CANCELED", data);
-  });
-  document.getElementById("btn-open")?.addEventListener("click", () => {
-    cashier.open({ sessionId: SESSION_ID });
-  });
-  document.getElementById("btn-close")?.addEventListener("click", () => {
-    cashier.close();
-  });
-  document.getElementById("btn-destroy")?.addEventListener("click", () => {
-    cashier.destroy();
+  payButton.addEventListener("click", () => {
+    statusEl.textContent = "\u23F3 Submitting\u2026";
+    statusEl.className = "";
+    payButton.disabled = true;
+    fields.submit({ saveCard: false, amount: 10 });
   });
 })();

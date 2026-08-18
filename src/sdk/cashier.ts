@@ -1,6 +1,6 @@
 import {mountModal} from "../ui/modal";
 import {mountMobile} from "../ui/mobile";
-import {mountInContainerWithId} from "../ui/container";
+import {mountInContainerWithId, mountHiddenIframe} from "../ui/container";
 import {EventEmitter} from "../util/event-emitter";
 import {
   CashierEmitEvent,
@@ -14,11 +14,18 @@ import {
   type openCashierParameters,
   PaymentAction,
   type PaymentEmitEventData,
-  type ResolvedCashierProperties
+  type ResolvedCashierProperties,
+  type HpfFieldName,
+  type HpfStyles,
+  type HpfHandle,
+  type HpfSubmitOptions,
+  type FieldValidityData,
+  type FieldFocusData,
+  type mountFieldsParameters
 } from "./types";
 import {CashierError, CashierErrorCode} from "../util/cashier-error";
 import {DEFAULT_MOBILE_STYLES, DEFAULT_MODAL_STYLES} from "../ui/data";
-import {buildCashierUrl} from "./url";
+import {buildCashierUrl, buildFieldUrl, buildCoordinatorUrl} from "./url";
 
 // const TRACKING_BRIDGE_ID = "omno-tracking-bridge"; // TRACKING_BRIDGE: disabled
 
@@ -35,6 +42,11 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
   private readonly boundMessageHandler: (event: MessageEvent) => void;
   private readonly parentUrl: string | undefined = undefined;
   private readonly baseUrl: string;
+  private readonly originBaseUrl: string;
+  private fieldIframes: Map<HpfFieldName, HTMLIFrameElement> = new Map();
+  private coordinatorIframe?: HTMLIFrameElement;
+  private hpfStyles?: HpfStyles;
+  private hpfSessionId?: string;
   // private trackingBridge?: HTMLIFrameElement; // TRACKING_BRIDGE: disabled
   // private readonly bridgeUrl: string; // TRACKING_BRIDGE: disabled
 
@@ -55,7 +67,8 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
       this.cashierProperties.device = this.detectDevice();
     }
     this.parentUrl = options.returnUrlAfterRedirection;
-    this.baseUrl = `${options.baseUrl?.replace(/\/+$/, '')}/payments-v2/cashier`;
+    this.originBaseUrl = `${options.baseUrl?.replace(/\/+$/, '')}`;
+    this.baseUrl = `${this.originBaseUrl}/payments-v2/cashier`;
 
     // this.bridgeUrl = `${options.baseUrl?.replace(/\/+$/, '')}/tracking-bridge`; // TRACKING_BRIDGE: disabled
 
@@ -130,6 +143,8 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
       }
       return;
     }
+
+    if (this.handleFieldMessage(event)) return;
 
     if (!this.iframe?.contentWindow) return;
     // TRACKING_BRIDGE: disabled
@@ -239,6 +254,122 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
       default:
         this.emit(CashierEmitEvent.UNKNOWN, { type, data });
         break;
+    }
+  }
+
+  mountFields({ sessionId, fields, styles }: mountFieldsParameters): HpfHandle {
+    this.destroyFields();
+    this.hpfSessionId = sessionId;
+    this.hpfStyles = styles;
+
+    (Object.keys(fields) as HpfFieldName[]).forEach((field) => {
+      const config = fields[field];
+      if (!config) return;
+      const url = buildFieldUrl(this.originBaseUrl, field, sessionId);
+      const iframe = mountInContainerWithId(url, config.containerId);
+      this.fieldIframes.set(field, iframe);
+    });
+
+    this.coordinatorIframe = mountHiddenIframe(
+      buildCoordinatorUrl(this.originBaseUrl, sessionId)
+    );
+
+    this.emit(CashierEmitEvent.IFRAME_OPENED, { sessionId });
+
+    return {
+      submit: (options?: HpfSubmitOptions) => this.submit(options),
+      destroy: () => this.destroyFields(),
+    };
+  }
+
+  submit(options?: HpfSubmitOptions): void {
+    if (!this.coordinatorIframe?.contentWindow) {
+      throw new CashierError(
+        CashierErrorCode.UNKNOWN,
+        "No hosted fields mounted; call mountFields() before submit()"
+      );
+    }
+    this.coordinatorIframe.contentWindow.postMessage(
+      {
+        type: CashierParentMessageType.SUBMIT,
+        data: { saveCard: options?.saveCard ?? false, amount: options?.amount },
+      },
+      "*"
+    );
+  }
+
+  /** Removes all mounted field iframes and the coordinator. */
+  destroyFields(): void {
+    this.fieldIframes.forEach((iframe) => iframe.remove());
+    this.fieldIframes.clear();
+    this.coordinatorIframe?.remove();
+    this.coordinatorIframe = undefined;
+    this.hpfStyles = undefined;
+    this.hpfSessionId = undefined;
+  }
+
+  private handleFieldMessage(event: MessageEvent): boolean {
+    if (this.fieldIframes.size === 0 && !this.coordinatorIframe) return false;
+    if (!this.isValidOrigin(event.origin)) return false;
+
+    const { type, data } = event.data ?? {};
+    switch (type) {
+      case CashierMessageType.FIELD_READY: {
+        const field = data?.field as HpfFieldName;
+        const iframe = this.fieldIframes.get(field);
+        if (iframe?.contentWindow) {
+          if (this.hpfStyles) {
+            iframe.contentWindow.postMessage(
+              {
+                type: CashierParentMessageType.SET_FIELD_STYLE,
+                data: { field, styles: this.hpfStyles },
+              },
+              "*"
+            );
+          }
+          if (this.currentLanguage) {
+            iframe.contentWindow.postMessage(
+              {
+                type: CashierParentMessageType.SET_LANGUAGE,
+                data: { language: this.currentLanguage },
+              },
+              "*"
+            );
+          }
+        }
+        return true;
+      }
+
+      case CashierMessageType.FIELD_VALIDITY_CHANGE:
+        this.emit(CashierEmitEvent.FIELD_VALIDITY_CHANGE, data as FieldValidityData);
+        return true;
+
+      case CashierMessageType.FIELD_FOCUS:
+        this.emit(CashierEmitEvent.FIELD_FOCUS, data as FieldFocusData);
+        return true;
+
+      case CashierMessageType.FIELD_BLUR:
+        this.emit(CashierEmitEvent.FIELD_BLUR, data as FieldFocusData);
+        return true;
+
+      case CashierMessageType.PAYMENT_SUCCESS:
+        this.emit(CashierEmitEvent.PAYMENT_SUCCESS, data as PaymentEmitEventData);
+        return true;
+
+      case CashierMessageType.PAYMENT_FAILED:
+        this.emit(CashierEmitEvent.PAYMENT_FAILED, data as PaymentEmitEventData);
+        return true;
+
+      case CashierMessageType.PAYMENT_PENDING:
+        this.emit(CashierEmitEvent.PAYMENT_PENDING, data as PaymentEmitEventData);
+        return true;
+
+      case CashierMessageType.PAYMENT_CANCELED:
+        this.emit(CashierEmitEvent.PAYMENT_CANCELED, data as PaymentEmitEventData);
+        return true;
+
+      default:
+        return false;
     }
   }
 

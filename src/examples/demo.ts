@@ -9,7 +9,7 @@ import {
   type PaymentEmitEventData
 } from "../sdk/types";
 
-const sessionId = "60fcd896-342a-4137-9c99-a6ce93d75316";
+const sessionId = "10cb9ae8-894b-4fd3-8803-ed5d2c974b65";
 
 // 1. Initialize SDK
 const cashier = new CashierSDK({

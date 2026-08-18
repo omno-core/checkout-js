@@ -23,3 +23,14 @@ export function mountInContainerWithId(url: string, containerId: string): HTMLIF
 
   return iframe;
 }
+
+export function mountHiddenIframe(url: string): HTMLIFrameElement {
+  const iframe = document.createElement("iframe");
+  iframe.src = url;
+  iframe.setAttribute("aria-hidden", "true");
+  iframe.setAttribute("tabindex", "-1");
+  iframe.style.cssText =
+    "display:none;width:0;height:0;border:none;position:absolute;pointer-events:none;";
+  document.body.appendChild(iframe);
+  return iframe;
+}

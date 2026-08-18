@@ -1,7 +1,7 @@
 import { context } from "esbuild";
 
 const ctx = await context({
-  entryPoints: ["src/examples/demo.ts", 'src/examples/tracking-bridge-demo.ts'],
+  entryPoints: ["src/examples/demo.ts", 'src/examples/tracking-bridge-demo.ts', 'src/examples/hpf-demo.ts'],
   bundle: true,
   outdir: "src/examples",
   loader: {

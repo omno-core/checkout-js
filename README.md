@@ -252,6 +252,148 @@ cashier.getDeviceType();
 cashier.getSessionId();
 ```
 
+## Hosted Payment Fields
+
+Hosted Payment Fields (HPF) let you build a **fully custom, fully branded checkout page** while Omno
+hosts only the sensitive card inputs. Instead of embedding the whole Cashier, you embed four small
+Omno-hosted iframe fields — **card number, expiry, CVV, and cardholder name** — into your own layout.
+
+Raw card data is entered inside cross-origin Omno iframes, so **your page and server never touch the
+PAN/CVV**. This keeps your PCI scope at **SAQ A / A-EP** instead of the full SAQ D you would take on by
+handling raw card data yourself. The payment completes against the existing session — no redirect — and
+your page receives an in-page success/decline/error event.
+
+> Use HPF when you want your own checkout UI but do **not** want raw card data in your environment. If
+> you're happy to embed Omno's full UI, use `cashier.open()` instead.
+
+### What the merchant needs to do
+
+**1. Create a card session (backend).** Same as the Cashier: create a session for the customer and get
+back a `sessionId`. HPF uses a single-card-method session.
+
+**2. Add four containers to your checkout page.** Each is a plain element you style however you like —
+Omno mounts an iframe inside it.
+
+```html
+<label>Cardholder name</label>
+<div id="om-cardholder"></div>
+
+<label>Card number</label>
+<div id="om-card-number"></div>
+
+<label>Expiry</label>
+<div id="om-expiry"></div>
+
+<label>CVV</label>
+<div id="om-cvv"></div>
+
+<button id="pay" disabled>Pay</button>
+```
+
+> **Sizing:** each container must be tall enough for an input control (≈ 48–56px). The mounted iframe
+> fills its container (`height: 100%`), so a container that is too short will clip the input.
+
+**3. Initialise the SDK and mount the fields.**
+
+```typescript
+import CashierSDK, { CashierEmitEvent } from "@omno-payment/checkout-js";
+
+const cashier = new CashierSDK({ baseUrl: "https://pay.your-omno-host.com" });
+
+const fields = cashier.mountFields({
+  sessionId,
+  fields: {
+    cardholder: { containerId: "om-cardholder" },
+    cardNumber: { containerId: "om-card-number" },
+    expiry:     { containerId: "om-expiry" },
+    cvv:        { containerId: "om-cvv" },
+  },
+  // Optional, constrained per-field styling (see whitelist below)
+  styles: {
+    base: {
+      color: "#1a1a2e",
+      fontFamily: "-apple-system, system-ui, sans-serif",
+      fontSize: "16px",
+      "::placeholder": { color: "#98a2b3" },
+    },
+    invalid: { color: "#d92d20" },
+  },
+});
+```
+
+**4. React to per-field validity** to enable/disable your Pay button.
+
+```typescript
+const validity = { cardNumber: false, expiry: false, cvv: false, cardholder: false };
+
+cashier.on(CashierEmitEvent.FIELD_VALIDITY_CHANGE, ({ field, valid }) => {
+  validity[field] = valid;
+  payButton.disabled = !Object.values(validity).every(Boolean);
+});
+
+// Optional focus/blur hooks for styling your container
+cashier.on(CashierEmitEvent.FIELD_FOCUS, ({ field }) => {/* ... */});
+cashier.on(CashierEmitEvent.FIELD_BLUR,  ({ field }) => {/* ... */});
+```
+
+**5. Submit from your own button and handle the result.** `submit()` orchestrates everything on the
+Omno origin; the card values never reach your code.
+
+```typescript
+payButton.addEventListener("click", () => {
+  fields.submit({ saveCard: false /*, amount: 49.99 */ });
+});
+
+cashier.on(CashierEmitEvent.PAYMENT_SUCCESS, (data) => {/* show success */});
+cashier.on(CashierEmitEvent.PAYMENT_FAILED,  (data) => {/* show decline  */});
+cashier.on(CashierEmitEvent.PAYMENT_PENDING, (data) => {/* show spinner  */});
+```
+
+Reconcile the final outcome server-side via your existing Omno webhook, exactly as you do today.
+
+### `mountFields` API
+
+```typescript
+cashier.mountFields({
+  sessionId: string,
+  fields: {
+    cardNumber?: { containerId: string },
+    expiry?:     { containerId: string },
+    cvv?:        { containerId: string },
+    cardholder?: { containerId: string },
+  },
+  styles?: HpfStyles,
+}): { submit(options?): void; destroy(): void }
+```
+
+`submit(options?)` — `options.saveCard?: boolean` (default `false`); `options.amount?: number | string`
+(required only for dynamic-amount sessions; ignored when the session has a fixed amount).
+
+`destroy()` — removes all field iframes and the internal coordinator. You can also call
+`cashier.submit(...)` / `cashier.destroyFields()` directly.
+
+### Styling whitelist
+
+Only these properties are forwarded to the field iframes (`styles.base`): `color`, `fontFamily`,
+`fontSize`, `fontWeight`, `lineHeight`, `letterSpacing`, `textAlign`, and `::placeholder: { color }`.
+Invalid state color is set via `styles.invalid.color`.
+
+### Events
+
+| Event | Fires when |
+|-------|------------|
+| `FIELD_VALIDITY_CHANGE` | A field's validity changes — `{ field, valid, error? }` |
+| `FIELD_FOCUS` / `FIELD_BLUR` | A field gains/loses focus — `{ field }` |
+| `PAYMENT_SUCCESS` / `PAYMENT_FAILED` / `PAYMENT_PENDING` | The payment resolves (same payloads as the full Cashier) |
+
+### Notes & current limitations
+
+- **Cardholder name is a hosted field** (`cardholder`) alongside card number, expiry, and CVV.
+- **3DS:** if the transaction requires a 3DS challenge it is currently reported as `PAYMENT_PENDING`;
+  in-page challenge handling is not yet available in this release.
+- **Domain allowlisting:** field routes are served with a `frame-ancestors` policy — your checkout
+  domain must be registered with Omno, or the browser will block the iframes.
+
 ## Dynamic Language
 
 The cashier language can be set at runtime by posting a `SET_LANGUAGE` message from the merchant page. The SDK picks up this event and forwards it to the cashier iframe.
