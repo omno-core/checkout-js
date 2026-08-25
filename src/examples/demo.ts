@@ -9,7 +9,7 @@ import {
   type PaymentEmitEventData
 } from "../sdk/types";
 
-const sessionId = "10cb9ae8-894b-4fd3-8803-ed5d2c974b65";
+const sessionId = "7dbeb527-0251-4cfc-9ecb-8e3ac3084f16";
 
 // 1. Initialize SDK
 const cashier = new CashierSDK({
@@ -94,6 +94,11 @@ cashier.on(CashierEmitEvent.KYC_REQUIRED_LEVEL_ERRORS, (data) => {
 // 3. Open Cashier (modal by default)
 document.getElementById("btn-open")?.addEventListener("click", () => {
   cashier.open({ sessionId });
+});
+
+// 3b. Open Cashier in single layout mode (?layout=single)
+document.getElementById("btn-open-single")?.addEventListener("click", () => {
+  cashier.open({ sessionId, layout: "single" });
 });
 
 // 4. Open Cashier in a specific container

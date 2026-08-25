@@ -688,7 +688,7 @@
   };
 
   // src/examples/demo.ts
-  var sessionId = "10cb9ae8-894b-4fd3-8803-ed5d2c974b65";
+  var sessionId = "7dbeb527-0251-4cfc-9ecb-8e3ac3084f16";
   var cashier = new CashierSDK({
     device: "AUTO" /* AUTO */,
     styles: {
@@ -751,6 +751,9 @@
   });
   document.getElementById("btn-open")?.addEventListener("click", () => {
     cashier.open({ sessionId });
+  });
+  document.getElementById("btn-open-single")?.addEventListener("click", () => {
+    cashier.open({ sessionId, layout: "single" });
   });
   document.getElementById("btn-container")?.addEventListener("click", () => {
     cashier.open({ sessionId, containerId: "your-container-id" });
