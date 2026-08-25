@@ -145,6 +145,7 @@ export interface ModalStyles {
 export interface MobileStyles {
   backgroundColor?: string;
   zIndex?: number;
+  height?: 'full' | 'auto' | (string & {});
 }
 
 export interface CashierStyles {

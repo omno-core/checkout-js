@@ -8,8 +8,10 @@ import "./skeletons/skeleton-card.js";
 export function mountMobile(url: string, styles: MobileStyles = {}) {
   const {
     backgroundColor = DEFAULT_MOBILE_STYLES.backgroundColor,
-    zIndex = DEFAULT_MOBILE_STYLES.zIndex
+    zIndex = DEFAULT_MOBILE_STYLES.zIndex,
+    height
   } = styles;
+  const isFullHeight = height === "full";
 
   const overlay = document.createElement("div");
   overlay.classList.add("cashier-mobile-overlay");
@@ -21,10 +23,15 @@ export function mountMobile(url: string, styles: MobileStyles = {}) {
   `;
 
   const loader = document.createElement("div");
-  loader.style.cssText = `position: absolute; width: 100%; bottom: 0; z-index: ${zIndex + 1};`;
+  loader.style.cssText = isFullHeight
+    ? `position: absolute; inset: 0; z-index: ${zIndex + 1};`
+    : `position: absolute; width: 100%; bottom: 0; z-index: ${zIndex + 1};`;
 
   const shadow = loader.attachShadow({ mode: "open" });
-  shadow.innerHTML = `<style>${loaderCSS}</style>${loaderHTML}`;
+  const fullHeightCSS = isFullHeight
+    ? `.cashier-mobile-loading-container { height: 100%; box-sizing: border-box; }`
+    : "";
+  shadow.innerHTML = `<style>${loaderCSS}${fullHeightCSS}</style>${loaderHTML}`;
 
   const closeBtn = shadow.querySelector("[data-cashier-close]");
   if (closeBtn) {

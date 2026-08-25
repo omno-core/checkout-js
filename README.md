@@ -86,6 +86,11 @@ interface ModalStyles {
 interface MobileStyles {
   backgroundColor?: string;
   zIndex?: number;
+  // Bottom-sheet height. Default is content-height capped at 90vh.
+  //  'full'  → full-screen sheet (100% of the viewport)
+  //  a CSS length/percentage ('200px', '40%', '70vh') → caps the sheet at that height
+  //  'auto' / omitted → default (90vh cap)
+  height?: 'full' | 'auto' | string;
 }
 ```
 
@@ -421,7 +426,7 @@ window.postMessage({ type: "SET_LANGUAGE", data: { language: "de" } }, "*");
 The SDK automatically detects mobile devices and adjusts the interface accordingly:
 
 - **Desktop**: Modal overlay with backdrop and close button
-- **Mobile**: Full-screen interface optimized for touch interaction
+- **Mobile**: A bottom sheet optimized for touch interaction
 
 You can override device detection:
 
@@ -432,6 +437,28 @@ const cashier = new CashierSDK({
   device: DeviceType.MOBILE // Force mobile layout
 });
 ```
+
+### Mobile sheet height
+
+By default the mobile bottom sheet sizes to its content, capped at `90vh`. Set
+`styles.mobile.height` to change this:
+
+```typescript
+const cashier = new CashierSDK({
+  baseUrl: "https://pay.your-omno-host.com",
+  styles: {
+    mobile: {
+      height: "full" // full-screen sheet (100% of the viewport)
+      // height: "200px" | "40%" | "70vh"  → cap the sheet at a specific height
+      // height: "auto"                    → default (content height, 90vh cap)
+    }
+  }
+});
+```
+
+- The option applies **only** on the mobile mount (`device` resolving to `MOBILE`); it is ignored for the desktop modal and container mounts.
+- Accepted values: `'full'`, `'auto'`, or a CSS length/percentage (`px`, `%`, `vh`, `dvh`, `svh`, `rem`, `em`). Any other value falls back to the default.
+- Requires a cashier host that supports the `mobileHeight` parameter (Cashier UI ≥ the release that ships it); older hosts safely ignore it and render the default sheet.
 
 ## TypeScript Support
 

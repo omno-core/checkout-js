@@ -406,7 +406,12 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
     paymentAction: PaymentAction | undefined,
     layout?: "single"
   ): string {
-    return buildCashierUrl(this.baseUrl, sessionId, paymentAction, layout);
+    const height = this.cashierProperties.styles?.mobile?.height;
+    const mobileHeight =
+      this.cashierProperties.device === DeviceType.MOBILE && height && height !== "auto"
+        ? height
+        : undefined;
+    return buildCashierUrl(this.baseUrl, sessionId, paymentAction, layout, mobileHeight);
   }
 
   open({ sessionId, containerId, paymentAction, layout }: openCashierParameters) {
