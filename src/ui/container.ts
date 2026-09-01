@@ -13,7 +13,7 @@ export function mountInContainerWithId(url: string, containerId: string): HTMLIF
   target.innerHTML = "";
 
   const iframe = document.createElement("iframe");
-  iframe.allow = "clipboard-read; clipboard-write";
+  iframe.allow = "payment; clipboard-read; clipboard-write";
   iframe.src = url;
   iframe.style.width = "100%";
   iframe.style.height = "100%";

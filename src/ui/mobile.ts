@@ -42,7 +42,7 @@ export function mountMobile(url: string, styles: MobileStyles = {}) {
   }
 
   const iframe = document.createElement("iframe");
-  iframe.allow = "clipboard-read; clipboard-write";
+  iframe.allow = "payment; clipboard-read; clipboard-write";
   iframe.src = url;
   iframe.style.cssText = `
     position: absolute; inset: 0; opacity: 0;
