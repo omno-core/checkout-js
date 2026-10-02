@@ -37,6 +37,7 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
   private currentPaymentAction?: PaymentAction;
   private currentLayout?: "single";
   private currentSessionId?: string;
+  private currentToken?: string;
   private currentLanguage?: string;
   private cashierProperties: ResolvedCashierProperties;
   private readonly boundMessageHandler: (event: MessageEvent) => void;
@@ -76,8 +77,10 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
     window.addEventListener("message", this.boundMessageHandler);
     // this.injectTrackingBridge(); // TRACKING_BRIDGE: disabled
     window.addEventListener("load", () => {
-      const sessionId = new URLSearchParams(window.location.search).get("omCashierSessionIdNo");
-      if (sessionId) this.open({ sessionId: sessionId });
+      const params = new URLSearchParams(window.location.search);
+      const sessionId = params.get("omCashierSessionIdNo");
+      const token = params.get("omCashierToken") ?? undefined;
+      if (sessionId) this.open({ sessionId, token });
     });
     window.addEventListener("pageshow", (event: PageTransitionEvent) => {
       if (!event.persisted || !this.isOpen() || !this.iframe) return;
@@ -404,24 +407,26 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
   private buildUrl(
     sessionId: string,
     paymentAction: PaymentAction | undefined,
-    layout?: "single"
+    layout?: "single",
+    token?: string
   ): string {
     const height = this.cashierProperties.styles?.mobile?.height;
     const mobileHeight =
       this.cashierProperties.device === DeviceType.MOBILE && height && height !== "auto"
         ? height
         : undefined;
-    return buildCashierUrl(this.baseUrl, sessionId, paymentAction, layout, mobileHeight);
+    return buildCashierUrl(this.baseUrl, sessionId, paymentAction, layout, mobileHeight, token);
   }
 
-  open({ sessionId, containerId, paymentAction, layout }: openCashierParameters) {
+  open({ sessionId, containerId, paymentAction, layout, token }: openCashierParameters) {
     this.emit(CashierEmitEvent.IFRAME_OPEN_REQUESTED, undefined);
     if (this.isOpen() && this.currentSessionId === sessionId) return;
     if (this.isOpen()) this.close();
 
     if (paymentAction) this.currentPaymentAction = paymentAction;
     this.currentLayout = layout;
-    const url = this.buildUrl(sessionId, paymentAction, layout);
+    this.currentToken = token;
+    const url = this.buildUrl(sessionId, paymentAction, layout, token);
 
     if (containerId) this.isOpenedIn = "Container";
     else this.isOpenedIn = "Modal";
@@ -480,6 +485,7 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
     this.iframe = undefined;
     this.container = undefined;
     this.currentSessionId = undefined;
+    this.currentToken = undefined;
     this.emit(CashierEmitEvent.IFRAME_CLOSED, undefined);
   }
 
@@ -496,6 +502,7 @@ export class CashierSDK extends EventEmitter<CashierEventMap> {
       containerId: this.container?.id,
       paymentAction: this.currentPaymentAction,
       layout: this.currentLayout,
+      token: this.currentToken,
     };
 
     this.close();

@@ -9,7 +9,10 @@ import {
   type PaymentEmitEventData
 } from "../sdk/types";
 
-const sessionId = "7dbeb527-0251-4cfc-9ecb-8e3ac3084f16";
+const sessionId = "45e71f59-6c99-4d1b-87d3-8d5d8f909f3c";
+// Paste a fresh cashier JWT (from the create-session response) whose session_id
+// claim matches `sessionId` above. Leave undefined to open without a token.
+const token: string | undefined = "eyJhbGciOiJIUzI1NiIsImtpZCI6ImRlZmF1bHQiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJjYXNoaWVyLXNlcnZpY2UiLCJleHAiOjE3OTA5MzA3MTgsImlhdCI6MTc5MDkyOTgxOCwianRpIjoiYjQ0MGI3MDMtYWRhNi00NjhiLTk4YWMtZjI2MGFkNjdjM2RlIiwibWVyY2hhbnRfaWQiOiJhOWNmNDI1MTllOTQ0OGExOWIwNGI5Yzg2YjBlMWE2NiIsImN1c3RvbWVyX2lkIjoiMWZmZTU2MmYtNzc4YS00OTE4LWFjYmMtMGVjMmM5NjdiMmNiIiwic2Vzc2lvbl9pZCI6IjQ1ZTcxZjU5LTZjOTktNGQxYi04N2QzLThkNWQ4ZjkwOWYzYyJ9.GROYqWWlmiZSPmmzwuGFfODJRIs-1heQGfEAS7-keso";
 
 // 1. Initialize SDK
 const cashier = new CashierSDK({
@@ -93,7 +96,7 @@ cashier.on(CashierEmitEvent.KYC_REQUIRED_LEVEL_ERRORS, (data) => {
 
 // 3. Open Cashier (modal by default)
 document.getElementById("btn-open")?.addEventListener("click", () => {
-  cashier.open({ sessionId });
+  cashier.open({ sessionId, token });
 });
 
 // 3b. Open Cashier in single layout mode (?layout=single)

@@ -162,7 +162,7 @@
       });
     }
     const iframe = document.createElement("iframe");
-    iframe.allow = "clipboard-read; clipboard-write";
+    iframe.allow = "payment; clipboard-read; clipboard-write";
     iframe.src = url;
     iframe.style.cssText = "width: 100%; height: 100%; border: none;";
     modal.appendChild(loader);
@@ -182,8 +182,10 @@
   function mountMobile(url, styles = {}) {
     const {
       backgroundColor = DEFAULT_MOBILE_STYLES.backgroundColor,
-      zIndex = DEFAULT_MOBILE_STYLES.zIndex
+      zIndex = DEFAULT_MOBILE_STYLES.zIndex,
+      height
     } = styles;
+    const isFullHeight = height === "full";
     const overlay = document.createElement("div");
     overlay.classList.add("cashier-mobile-overlay");
     overlay.style.cssText = `
@@ -193,9 +195,10 @@
     z-index: ${zIndex};
   `;
     const loader = document.createElement("div");
-    loader.style.cssText = `position: absolute; width: 100%; bottom: 0; z-index: ${zIndex + 1};`;
+    loader.style.cssText = isFullHeight ? `position: absolute; inset: 0; z-index: ${zIndex + 1};` : `position: absolute; width: 100%; bottom: 0; z-index: ${zIndex + 1};`;
     const shadow = loader.attachShadow({ mode: "open" });
-    shadow.innerHTML = `<style>${mobile_loader_default2}</style>${mobile_loader_default}`;
+    const fullHeightCSS = isFullHeight ? `.cashier-mobile-loading-container { height: 100%; box-sizing: border-box; }` : "";
+    shadow.innerHTML = `<style>${mobile_loader_default2}${fullHeightCSS}</style>${mobile_loader_default}`;
     const closeBtn = shadow.querySelector("[data-cashier-close]");
     if (closeBtn) {
       closeBtn.addEventListener("click", (e) => {
@@ -204,7 +207,7 @@
       });
     }
     const iframe = document.createElement("iframe");
-    iframe.allow = "clipboard-read; clipboard-write";
+    iframe.allow = "payment; clipboard-read; clipboard-write";
     iframe.src = url;
     iframe.style.cssText = `
     position: absolute; inset: 0; opacity: 0;
@@ -237,7 +240,7 @@
     }
     target.innerHTML = "";
     const iframe = document.createElement("iframe");
-    iframe.allow = "clipboard-read; clipboard-write";
+    iframe.allow = "payment; clipboard-read; clipboard-write";
     iframe.src = url;
     iframe.style.width = "100%";
     iframe.style.height = "100%";
@@ -288,10 +291,15 @@
   };
 
   // src/sdk/url.ts
-  function buildCashierUrl(baseUrl, sessionId, paymentAction, layout) {
+  function buildCashierUrl(baseUrl, sessionId, paymentAction, layout, mobileHeight, token) {
     const suffix = paymentAction ? paymentAction.toLowerCase() : void 0;
     const path = suffix ? `${baseUrl}/${sessionId}/${suffix}` : `${baseUrl}/${sessionId}`;
-    return layout === "single" ? `${path}?layout=single` : path;
+    const params = new URLSearchParams();
+    if (layout === "single") params.set("layout", "single");
+    if (mobileHeight) params.set("mobileHeight", mobileHeight);
+    if (token) params.set("ct", token);
+    const query = params.toString();
+    return query ? `${path}?${query}` : path;
   }
   var HPF_FIELD_SLUGS = {
     cardNumber: "card-number",
@@ -334,8 +342,10 @@
       this.boundMessageHandler = this.setupMessageListener.bind(this);
       window.addEventListener("message", this.boundMessageHandler);
       window.addEventListener("load", () => {
-        const sessionId = new URLSearchParams(window.location.search).get("omCashierSessionIdNo");
-        if (sessionId) this.open({ sessionId });
+        const params = new URLSearchParams(window.location.search);
+        const sessionId = params.get("omCashierSessionIdNo");
+        const token = params.get("omCashierToken") ?? void 0;
+        if (sessionId) this.open({ sessionId, token });
       });
       window.addEventListener("pageshow", (event) => {
         if (!event.persisted || !this.isOpen() || !this.iframe) return;
@@ -599,16 +609,19 @@
       ) || window.innerWidth <= 768;
       return isMobile ? "MOBILE" /* MOBILE */ : "DESKTOP" /* DESKTOP */;
     }
-    buildUrl(sessionId, paymentAction, layout) {
-      return buildCashierUrl(this.baseUrl, sessionId, paymentAction, layout);
+    buildUrl(sessionId, paymentAction, layout, token) {
+      const height = this.cashierProperties.styles?.mobile?.height;
+      const mobileHeight = this.cashierProperties.device === "MOBILE" /* MOBILE */ && height && height !== "auto" ? height : void 0;
+      return buildCashierUrl(this.baseUrl, sessionId, paymentAction, layout, mobileHeight, token);
     }
-    open({ sessionId, containerId, paymentAction, layout }) {
+    open({ sessionId, containerId, paymentAction, layout, token }) {
       this.emit("iframeOpenRequested" /* IFRAME_OPEN_REQUESTED */, void 0);
       if (this.isOpen() && this.currentSessionId === sessionId) return;
       if (this.isOpen()) this.close();
       if (paymentAction) this.currentPaymentAction = paymentAction;
       this.currentLayout = layout;
-      const url = this.buildUrl(sessionId, paymentAction, layout);
+      this.currentToken = token;
+      const url = this.buildUrl(sessionId, paymentAction, layout, token);
       if (containerId) this.isOpenedIn = "Container";
       else this.isOpenedIn = "Modal";
       try {
@@ -653,6 +666,7 @@
       this.iframe = void 0;
       this.container = void 0;
       this.currentSessionId = void 0;
+      this.currentToken = void 0;
       this.emit("iframeClosed" /* IFRAME_CLOSED */, void 0);
     }
     reload() {
@@ -666,7 +680,8 @@
         sessionId: this.currentSessionId,
         containerId: this.container?.id,
         paymentAction: this.currentPaymentAction,
-        layout: this.currentLayout
+        layout: this.currentLayout,
+        token: this.currentToken
       };
       this.close();
       this.open(params);

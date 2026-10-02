@@ -5,7 +5,8 @@ export function buildCashierUrl(
   sessionId: string,
   paymentAction?: PaymentAction,
   layout?: "single",
-  mobileHeight?: string
+  mobileHeight?: string,
+  token?: string
 ): string {
   const suffix = paymentAction ? paymentAction.toLowerCase() : undefined;
   const path = suffix ? `${baseUrl}/${sessionId}/${suffix}` : `${baseUrl}/${sessionId}`;
@@ -13,6 +14,7 @@ export function buildCashierUrl(
   const params = new URLSearchParams();
   if (layout === "single") params.set("layout", "single");
   if (mobileHeight) params.set("mobileHeight", mobileHeight);
+  if (token) params.set("ct", token);
   const query = params.toString();
 
   return query ? `${path}?${query}` : path;

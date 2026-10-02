@@ -159,6 +159,7 @@ export type openCashierParameters = {
   containerId?: string;
   paymentAction?: PaymentAction | undefined;
   layout?: 'single';
+  token?: string;
 }
 
 export type HpfFieldName = 'cardNumber' | 'expiry' | 'cvv' | 'cardholder';
