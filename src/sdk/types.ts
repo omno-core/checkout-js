@@ -13,6 +13,8 @@ export enum CashierMessageType {
 
   MOBILE_OVERLAY_CLICKED = "MOBILE_OVERLAY_CLICKED",
 
+  CUSTOM_REJECT_ACKNOWLEDGED = "CUSTOM_REJECT_ACKNOWLEDGED",
+
   FIELD_READY = "FIELD_READY",
   FIELD_VALIDITY_CHANGE = "FIELD_VALIDITY_CHANGE",
   FIELD_FOCUS = "FIELD_FOCUS",
@@ -38,6 +40,8 @@ export enum CashierEmitEvent {
   KYC_REQUIRED_FIELD_ERRORS = 'kycRequiredFieldErrors',
   KYC_REQUIRED_LEVEL_ERRORS = 'kycRequiredLevelErrors',
   ANALYTICS_EVENT = "ANALYTICS_EVENT",
+
+  CUSTOM_REJECT_ACKNOWLEDGED = "customRejectAcknowledged",
 
   FIELD_VALIDITY_CHANGE = "fieldValidityChange",
   FIELD_FOCUS = "fieldFocus",
@@ -65,6 +69,7 @@ export type CashierEventMap = {
   [CashierEmitEvent.KYC_REQUIRED_FIELD_ERRORS]: KYCRequiredFieldErrorsData[];
   [CashierEmitEvent.KYC_REQUIRED_LEVEL_ERRORS]: KYCRequiredLevelErrorsData[];
   [CashierEmitEvent.ANALYTICS_EVENT]: PaymentEmitEventData;
+  [CashierEmitEvent.CUSTOM_REJECT_ACKNOWLEDGED]: CustomRejectAcknowledgedData;
 
   [CashierEmitEvent.FIELD_VALIDITY_CHANGE]: FieldValidityData;
   [CashierEmitEvent.FIELD_FOCUS]: FieldFocusData;
@@ -92,6 +97,10 @@ export type KYCRequiredFieldErrorsData = {
 export type KYCRequiredLevelErrorsData = {
   level: string,
   description: string,
+}
+
+export type CustomRejectAcknowledgedData = {
+  messageName: string,
 }
 
 // cashierSdk to iframe message

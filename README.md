@@ -220,6 +220,23 @@ cashier.on(CashierEmitEvent.OVERLAY_CLICKED, () => {
 });
 ```
 
+### Custom Reject Message Acknowledgement
+
+Fired when a customer activates the button on a **merchant custom reject message**
+(withdrawals only). When a withdrawal is declined with a configured custom reject
+message, the cashier shows that message's icon/title/content/button instead of the
+generic decline copy. Clicking the button emits this event with the message `name`
+so the host page can decide what happens next — e.g. route the customer somewhere
+or reload the session. The cashier does **not** auto-close on this event; routing is
+left to the merchant.
+
+```typescript
+cashier.on(CashierEmitEvent.CUSTOM_REJECT_ACKNOWLEDGED, ({ messageName }) => {
+  // e.g. route the customer based on messageName, or reload the session
+  console.log("Custom reject acknowledged:", messageName);
+});
+```
+
 ## Methods
 
 ### Core Methods
@@ -590,3 +607,4 @@ cashier.on(CashierEmitEvent.PAYMENT_SUCCESS, (data: PaymentEmitEventData) => {
 | `kycRequiredFieldErrors` | `KYCRequiredFieldErrorsData[]` | Fired when required KYC fields are missing or invalid and must be completed by the user. |
 | `kycRequiredLevelErrors` | `KYCRequiredLevelErrorsData[]` | Fired when required KYC Level(s) are incompatible and must be completed by the user.     |
 | `ANALYTICS_EVENT`        | `PaymentEmitEventData`         | Fired once per unique transaction after deduplication. Use this for analytics and conversion tracking instead of `paymentSuccess`. |
+| `customRejectAcknowledged` | `CustomRejectAcknowledgedData` | Fired when the customer activates the button on a merchant custom reject message (withdraw only). Carries the message `name`; host decides routing/session reload. Cashier does not auto-close. |
